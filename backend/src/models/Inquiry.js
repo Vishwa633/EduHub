@@ -14,7 +14,7 @@ const inquirySchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ["tutor", "academic", "other"],
+      enum: ["tutor", "academic", "payment", "booking", "technical", "other"],
       default: "other",
       required: true,
     },

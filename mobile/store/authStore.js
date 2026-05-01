@@ -239,6 +239,12 @@ export const useAuthStore = create((set) => ({
     },
 
     logout: async () => {
+        try {
+            const { useChatStore } = require('./chatStore');
+            useChatStore.getState().disconnectSocket();
+        } catch (e) {
+            // chatStore may not be available
+        }
         await AsyncStorage.removeItem("token");
         await AsyncStorage.removeItem("user");
         set({ token: null, user: null });

@@ -10,6 +10,7 @@ import tutorReviewsRoutes from "./routes/tutorReviews.js";
 import materialRoutes from "./routes/materialRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import chatbotRoutes from "./routes/chatbotRoutes.js";
+import inquiryRoutes from "./routes/inquiryRoutes.js";
 
 import { startPaymentScheduler } from "./services/paymentScheduler.js";
 import { ensureDefaultAdmin } from "./services/seedAdmin.js";
@@ -34,6 +35,7 @@ app.use("/api/tutorreviews", tutorReviewsRoutes);
 app.use("/api/materials", materialRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/chatbot", chatbotRoutes);
+app.use("/api/inquiries", inquiryRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {

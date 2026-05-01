@@ -96,7 +96,7 @@ export const useChatStore = create((set, get) => ({
 
     const socket = io(BASE_URL, {
       query: {
-        userId: user._id,
+        userId: user._id || user.id,
       },
     });
     socket.connect();

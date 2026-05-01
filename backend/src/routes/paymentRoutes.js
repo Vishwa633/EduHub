@@ -298,6 +298,43 @@ router.patch("/admin/:paymentId/release", protectRoute, async (req, res) => {
   }
 });
 
+router.get("/admin/dashboard-stats", protectRoute, async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res
+        .status(403)
+        .json({ message: "Only admins can view dashboard stats" });
+    }
+
+    const [tutorCount, studentCount, activeSessions, revenueData] =
+      await Promise.all([
+        mongoose.model("User").countDocuments({ role: "tutor" }),
+        mongoose.model("User").countDocuments({ role: "student" }),
+        BookingRequest.countDocuments({
+          status: { $in: ["funds_held", "completed_by_tutor", "disputed"] },
+        }),
+        Payment.aggregate([
+          { $match: { status: "released" } },
+          { $group: { _id: null, total: { $sum: "$amount" } } },
+        ]),
+      ]);
+
+    const totalRevenue = revenueData.length > 0 ? revenueData[0].total : 0;
+
+    return res.status(200).json({
+      tutors: tutorCount,
+      students: studentCount,
+      activeSessions,
+      revenue: totalRevenue,
+    });
+  } catch (error) {
+    console.error("Error loading dashboard stats:", error);
+    return res
+      .status(500)
+      .json({ message: "Internal Server error", error: error.message });
+  }
+});
+
 // ─── PARAMETERIZED ROUTES (/:bookingId) ─────────────────────────────────────
 
 router.post("/:bookingId/hold", protectRoute, async (req, res) => {
@@ -563,230 +600,6 @@ router.patch("/:bookingId/report-problem", protectRoute, async (req, res) => {
   }
 });
 
-router.get("/admin/disputes/list", protectRoute, async (req, res) => {
-  try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Only admins can view disputes" });
-    }
-
-    const disputes = await Payment.find({ status: "disputed" })
-      .sort({ updatedAt: -1 })
-      .populate({
-        path: "sessionId",
-        populate: [
-          { path: "student", select: "username email" },
-          { path: "tutor", select: "username email tutorProfile.fullName" },
-        ],
-      })
-      .lean();
-
-    const paymentIds = disputes.map((payment) => payment._id);
-    const logs = await PaymentActionLog.find({ payment: { $in: paymentIds } })
-      .sort({ createdAt: -1 })
-      .lean();
-
-    const logsByPayment = new Map();
-    for (const log of logs) {
-      const key = String(log.payment);
-      const existing = logsByPayment.get(key) || [];
-      existing.push(log);
-      logsByPayment.set(key, existing);
-    }
-
-    const result = disputes.map((payment) => ({
-      ...buildPaymentSnapshot(payment),
-      session: payment.sessionId
-        ? {
-            id: payment.sessionId._id,
-            subject: payment.sessionId.subject,
-            sessionDate: payment.sessionId.sessionDate,
-            sessionTime: payment.sessionId.sessionTime,
-            sessionMode: payment.sessionId.sessionMode,
-            tutorMessage: payment.sessionId.tutorMessage,
-            student: payment.sessionId.student,
-            tutor: payment.sessionId.tutor,
-          }
-        : null,
-      actionLogs: logsByPayment.get(String(payment._id)) || [],
-    }));
-
-    return res.status(200).json(result);
-  } catch (error) {
-    console.error("Error loading disputes:", error);
-    return res
-      .status(500)
-      .json({ message: "Internal Server error", error: error.message });
-  }
-});
-
-router.patch("/admin/:paymentId/refund", protectRoute, async (req, res) => {
-  try {
-    if (req.user.role !== "admin") {
-      return res
-        .status(403)
-        .json({ message: "Only admins can refund disputed payments" });
-    }
-
-    const { paymentId } = req.params;
-    if (!validObjectId(paymentId)) {
-      return res.status(400).json({ message: "Invalid payment id" });
-    }
-
-    const payment = await Payment.findById(paymentId);
-    if (!payment) {
-      return res.status(404).json({ message: "Payment not found" });
-    }
-
-    if (payment.status !== "disputed") {
-      return res
-        .status(400)
-        .json({ message: "Only disputed payments can be refunded" });
-    }
-
-    const booking = await BookingRequest.findById(payment.sessionId);
-    if (!booking) {
-      return res.status(404).json({ message: "Booking not found" });
-    }
-
-    payment.status = "refunded";
-    payment.refundedAt = new Date();
-    await payment.save();
-
-    booking.status = "refunded";
-    await booking.save();
-
-    await PaymentActionLog.create({
-      payment: payment._id,
-      sessionId: booking._id,
-      actor: req.user._id,
-      actorRole: "admin",
-      action: "admin_refunded_student",
-      details: {},
-    });
-
-    return res.status(200).json(buildPaymentSnapshot(payment));
-  } catch (error) {
-    console.error("Error refunding payment:", error);
-    return res
-      .status(500)
-      .json({ message: "Internal Server error", error: error.message });
-  }
-});
-
-router.patch("/admin/:paymentId/release", protectRoute, async (req, res) => {
-  try {
-    if (req.user.role !== "admin") {
-      return res
-        .status(403)
-        .json({ message: "Only admins can release disputed payments" });
-    }
-
-    const { paymentId } = req.params;
-    if (!validObjectId(paymentId)) {
-      return res.status(400).json({ message: "Invalid payment id" });
-    }
-
-    const payment = await Payment.findById(paymentId);
-    if (!payment) {
-      return res.status(404).json({ message: "Payment not found" });
-    }
-
-    const canRelease =
-      payment.status === "disputed" ||
-      (payment.status === "pending" && payment.tutorConfirmed === true);
-
-    if (!canRelease) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Payment can only be released if disputed or completed by tutor",
-        });
-    }
-
-    const booking = await BookingRequest.findById(payment.sessionId);
-    if (!booking) {
-      return res.status(404).json({ message: "Booking not found" });
-    }
-
-    payment.status = "pending";
-    await payment.save();
-
-    await releasePayment({
-      booking,
-      payment,
-      actorRole: "admin",
-      actorId: req.user._id,
-      reason: "admin_resolved_dispute",
-    });
-
-    return res.status(200).json(buildPaymentSnapshot(payment));
-  } catch (error) {
-    console.error("Error releasing disputed payment:", error);
-    return res
-      .status(500)
-      .json({ message: "Internal Server error", error: error.message });
-  }
-});
-
-router.get("/alerts/me", protectRoute, async (req, res) => {
-  try {
-    const alerts = await InAppNotification.find({ user: req.user._id })
-      .sort({ deliveredAt: -1 })
-      .limit(50)
-      .lean();
-
-    return res.status(200).json(alerts);
-  } catch (error) {
-    console.error("Error loading alerts:", error);
-    return res
-      .status(500)
-      .json({ message: "Internal Server error", error: error.message });
-  }
-});
-
-router.patch("/alerts/:id/read", protectRoute, async (req, res) => {
-  try {
-    if (!validObjectId(req.params.id)) {
-      return res.status(400).json({ message: "Invalid alert id" });
-    }
-
-    const alert = await InAppNotification.findById(req.params.id);
-    if (!alert) {
-      return res.status(404).json({ message: "Alert not found" });
-    }
-
-    if (String(alert.user) !== String(req.user._id)) {
-      return res.status(403).json({ message: "Not authorized" });
-    }
-
-    alert.isRead = true;
-    await alert.save();
-
-    return res.status(200).json({ message: "Alert marked as read" });
-  } catch (error) {
-    console.error("Error marking alert read:", error);
-    return res
-      .status(500)
-      .json({ message: "Internal Server error", error: error.message });
-  }
-});
-
-router.delete("/alerts/me", protectRoute, async (req, res) => {
-  try {
-    const result = await InAppNotification.deleteMany({ user: req.user._id });
-    return res.status(200).json({
-      message: "Alerts cleared successfully",
-      deletedCount: Number(result?.deletedCount || 0),
-    });
-  } catch (error) {
-    console.error("Error clearing alerts:", error);
-    return res
-      .status(500)
-      .json({ message: "Internal Server error", error: error.message });
-  }
-});
-
 router.get("/:bookingId/logs", protectRoute, async (req, res) => {
   try {
     const { bookingId } = req.params;
@@ -823,41 +636,5 @@ router.get("/:bookingId/logs", protectRoute, async (req, res) => {
   }
 });
 
-router.get("/admin/dashboard-stats", protectRoute, async (req, res) => {
-  try {
-    if (req.user.role !== "admin") {
-      return res
-        .status(403)
-        .json({ message: "Only admins can view dashboard stats" });
-    }
-
-    const [tutorCount, studentCount, activeSessions, revenueData] =
-      await Promise.all([
-        mongoose.model("User").countDocuments({ role: "tutor" }),
-        mongoose.model("User").countDocuments({ role: "student" }),
-        BookingRequest.countDocuments({
-          status: { $in: ["funds_held", "completed_by_tutor", "disputed"] },
-        }),
-        Payment.aggregate([
-          { $match: { status: "released" } },
-          { $group: { _id: null, total: { $sum: "$amount" } } },
-        ]),
-      ]);
-
-    const totalRevenue = revenueData.length > 0 ? revenueData[0].total : 0;
-
-    return res.status(200).json({
-      tutors: tutorCount,
-      students: studentCount,
-      activeSessions,
-      revenue: totalRevenue,
-    });
-  } catch (error) {
-    console.error("Error loading dashboard stats:", error);
-    return res
-      .status(500)
-      .json({ message: "Internal Server error", error: error.message });
-  }
-});
 
 export default router;

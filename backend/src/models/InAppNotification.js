@@ -20,9 +20,15 @@ const inAppNotificationSchema = new mongoose.Schema(
       default: null,
       index: true,
     },
+    inquiry: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Inquiry",
+      default: null,
+      index: true,
+    },
     type: {
       type: String,
-      enum: ["session_completed", "reminder", "final_warning", "dispute", "system"],
+      enum: ["session_completed", "reminder", "final_warning", "dispute", "system", "inquiry"],
       required: true,
       index: true,
     },
