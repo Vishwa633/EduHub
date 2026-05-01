@@ -5,6 +5,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { API_URL } from "../../constants/api";
 import { useAuthStore } from "../../store/authStore";
 import { useColors } from "../../hooks/useColors";
+import AdminSidebar from "../components/AdminSidebar";
 
 const statusLabel = (value) => {
   const normalized = String(value || "").toLowerCase();
@@ -29,6 +30,7 @@ export default function AdminHome() {
 
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingTutorCount, setPendingTutorCount] = useState(0);
   const [latestPendingName, setLatestPendingName] = useState("");
   const [unreadAlertCount, setUnreadAlertCount] = useState(0);
@@ -53,6 +55,15 @@ export default function AdminHome() {
     },
     topbarLeft: {
       flex: 1,
+    },
+    menuButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 8,
+      borderWidth: 1,
     },
     title: {
       color: COLORS.textPrimary,
@@ -411,8 +422,9 @@ export default function AdminHome() {
     >
       <View style={styles.topbar}>
         <View style={styles.topbarLeft}>
-          <Text style={styles.title}>Welcome back, Admin</Text>
-          <Text style={styles.subtitle}>Manage sessions, tutors, and students from one place</Text>
+          <TouchableOpacity activeOpacity={0.85} onPress={() => setSidebarOpen(true)} style={[styles.menuButton, { backgroundColor: COLORS.cardBackground, borderColor: COLORS.border }]}>
+            <Ionicons name="menu-outline" size={22} color={COLORS.primary} />
+          </TouchableOpacity>
         </View>
         <TouchableOpacity activeOpacity={0.85} onPress={openNotifications} style={[styles.iconButton]}>
           <Ionicons name="notifications-outline" size={28} color={COLORS.primary} />
@@ -483,6 +495,15 @@ export default function AdminHome() {
           <Text style={[styles.actionTextSecondary, { marginLeft: 8 }]}>Logout</Text>
         </TouchableOpacity>
       </View>
+
+      <AdminSidebar
+        visible={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        actions={{ openSessions, openUserDetails, openPendingTutors, openNotifications, openPayments: (f) => router.push("/(admin)/payments"), onLogout }}
+        user={user}
+        pendingTutorCount={pendingTutorCount}
+        unreadAlertCount={unreadAlertCount}
+      />
     </ScrollView>
   );
 }
