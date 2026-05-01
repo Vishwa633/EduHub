@@ -8,6 +8,7 @@ import bookingRoutes from './routes/bookingRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import tutorRoutes from './routes/tutorRoutes.js';
 import tutorReviewsRoutes from './routes/tutorReviews.js';
+import inquiryRoutes from './routes/inquiryRoutes.js';
 import { startPaymentScheduler } from './services/paymentScheduler.js';
 import { ensureDefaultAdmin } from './services/seedAdmin.js';
 
@@ -30,6 +31,7 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/tutors", tutorRoutes);
 app.use("/api/tutorreviews", tutorReviewsRoutes);
+app.use("/api/inquiries", inquiryRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {

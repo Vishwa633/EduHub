@@ -166,15 +166,33 @@ export default function AdminNotificationsPage() {
           const level = normalizeLevel(item?.level);
           const levelStyle = levelStyles[level] || levelStyles.info;
           const isJustSeen = item?.justSeen === true;
+          const isInquiry = item?.type === "inquiry";
+
+          const handlePress = () => {
+            if (isInquiry && item.inquiry) {
+              router.push(`/inquiry/${item.inquiry}`);
+            }
+          };
 
           return (
-            <View style={[styles.card, { backgroundColor: isJustSeen ? `${COLORS.primary}12` : levelStyle.bg, borderColor: isJustSeen ? COLORS.primary : levelStyle.border }]}>
-              <Ionicons name="notifications-outline" size={18} color={isJustSeen ? COLORS.primary : levelStyle.icon} />
+            <TouchableOpacity 
+              activeOpacity={isInquiry ? 0.7 : 1}
+              onPress={handlePress}
+              style={[styles.card, { backgroundColor: isJustSeen ? `${COLORS.primary}12` : levelStyle.bg, borderColor: isJustSeen ? COLORS.primary : levelStyle.border }]}
+            >
+              <Ionicons 
+                name={isInquiry ? "chatbubble-ellipses-outline" : "notifications-outline"} 
+                size={18} 
+                color={isJustSeen ? COLORS.primary : levelStyle.icon} 
+              />
               <View style={{ flex: 1 }}>
                 <Text style={{ color: isJustSeen ? COLORS.primary : COLORS.textPrimary, fontWeight: "800" }}>{item?.title || "Notification"}</Text>
                 <Text style={{ color: COLORS.textSecondary, marginTop: 3, lineHeight: 18 }}>{item?.message || ""}</Text>
               </View>
-            </View>
+              {isInquiry && (
+                <Ionicons name="chevron-forward" size={16} color={COLORS.textSecondary} />
+              )}
+            </TouchableOpacity>
           );
         }}
       />
