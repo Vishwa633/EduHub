@@ -354,19 +354,9 @@ export default function TutorNotificationsPage() {
               {alerts.map((alert) => {
                 const levelStyle = alertLevelStyles[alert.level] || alertLevelStyles.info;
                 const isJustSeen = alert?.justSeen === true;
-                const isInquiry = alert.type === "inquiry";
-                
-                const handlePress = () => {
-                  if (isInquiry && alert.inquiry) {
-                    router.push(`/inquiry/${alert.inquiry}`);
-                  }
-                };
-
                 return (
-                  <TouchableOpacity
+                  <View
                     key={String(alert._id || alert.id)}
-                    activeOpacity={isInquiry ? 0.7 : 1}
-                    onPress={handlePress}
                     style={[
                       styles.alertCard,
                       {
@@ -375,19 +365,12 @@ export default function TutorNotificationsPage() {
                       },
                     ]}
                   >
-                    <Ionicons 
-                      name={isInquiry ? "chatbubble-ellipses-outline" : "notifications-outline"} 
-                      size={18} 
-                      color={isJustSeen ? COLORS.primary : levelStyle.icon} 
-                    />
+                    <Ionicons name="notifications-outline" size={18} color={isJustSeen ? COLORS.primary : levelStyle.icon} />
                     <View style={{ flex: 1 }}>
                       <Text style={{ color: isJustSeen ? COLORS.primary : COLORS.textPrimary, fontWeight: "800" }}>{alert.title || "Notification"}</Text>
                       <Text style={{ color: COLORS.textSecondary, marginTop: 2 }}>{alert.message || ""}</Text>
                     </View>
-                    {isInquiry && (
-                      <Ionicons name="chevron-forward" size={16} color={COLORS.textSecondary} />
-                    )}
-                  </TouchableOpacity>
+                  </View>
                 );
               })}
             </View>

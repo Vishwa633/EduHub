@@ -106,16 +106,6 @@ export default function AdminLayout() {
       />
 
       <Tabs.Screen
-        name="inquiries"
-        options={{
-          title: "Tickets",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="chatbox-ellipses-outline" size={size} color={color} />
-          ),
-        }}
-      />
-
-      <Tabs.Screen
         name="notifications"
         options={{
           href: null,
