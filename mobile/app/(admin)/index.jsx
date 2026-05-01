@@ -317,18 +317,16 @@ export default function AdminHome() {
       if (isRefresh) setRefreshing(true);
       else setLoading(true);
 
-      const [pendingResponse, alertsResponse, tutorsResponse, studentsResponse] = await Promise.all([
+      const [pendingResponse, alertsResponse, statsResponse] = await Promise.all([
         fetch(`${API_URL}/tutors/admin/pending-tutors/summary`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${API_URL}/payments/alerts/me`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${API_URL}/tutors/admin/users?role=tutor&page=1&limit=1`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${API_URL}/tutors/admin/users?role=student&page=1&limit=1`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_URL}/payments/admin/dashboard-stats`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
 
-      const [pendingData, alertsData, tutorsData, studentsData] = await Promise.all([
+      const [pendingData, alertsData, statsData] = await Promise.all([
         pendingResponse.json(),
         alertsResponse.json(),
-        tutorsResponse.json(),
-        studentsResponse.json(),
+        statsResponse.json(),
       ]);
 
       if (pendingResponse.ok) {
@@ -342,12 +340,14 @@ export default function AdminHome() {
         setUnreadAlertCount(allAlerts.filter((item) => item?.isRead !== true).length);
       }
 
-      const tutorCount = Number(tutorsData?.totalUsers || 0);
-      const studentCount = Number(studentsData?.totalUsers || 0);
-      const activeSessionCount = 0;
-      const revenue = 0;
-
-      setStats({ tutors: tutorCount, students: studentCount, activeSessions: activeSessionCount, revenue });
+      if (statsResponse.ok) {
+        setStats({
+          tutors: statsData.tutors || 0,
+          students: statsData.students || 0,
+          activeSessions: statsData.activeSessions || 0,
+          revenue: statsData.revenue || 0,
+        });
+      }
     } catch (error) {
       Alert.alert("Error", error.message || "Unable to load dashboard data");
     } finally {
@@ -471,6 +471,9 @@ export default function AdminHome() {
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionButtonSecondary} onPress={openUserDetails}>
           <Text style={styles.actionTextSecondary}>Users</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionButtonSecondary} onPress={() => router.push("/(admin)/payments")}>
+          <Text style={styles.actionTextSecondary}>Payments</Text>
         </TouchableOpacity>
       </View>
 

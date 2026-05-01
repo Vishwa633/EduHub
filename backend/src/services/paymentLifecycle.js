@@ -103,6 +103,24 @@ export const markTutorCompleted = async ({ booking, payment, tutorId }) => {
     level: "info",
   });
 
+  // Notify Admins
+  const admins = await User.find({ role: "admin" }).select("_id").lean();
+  if (admins.length) {
+    await Promise.all(
+      admins.map((admin) =>
+        pushNotification({
+          userId: admin._id,
+          bookingId: booking._id,
+          paymentId: payment._id,
+          type: "system",
+          title: "Payment release required",
+          message: `Tutor ${booking.tutorName} completed session for ${booking.studentName}. Please release the payment.`,
+          level: "info",
+        })
+      )
+    );
+  }
+
   return payment;
 };
 

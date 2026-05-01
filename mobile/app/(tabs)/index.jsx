@@ -273,10 +273,7 @@ export default function Home() {
                 backgroundColor: COLORS.white,
                 borderWidth: 1,
                 borderColor: COLORS.border,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.08,
-                shadowRadius: 14,
+                boxShadow: '0px 8px 14px rgba(0, 0, 0, 0.08)',
                 elevation: 3,
                 justifyContent: 'space-between',
                 overflow: 'hidden',
@@ -318,7 +315,7 @@ export default function Home() {
         }}
         ListHeaderComponent={
           <View style={{ paddingHorizontal: 8, paddingTop: 16, paddingBottom: 16 }}>
-            <View style={{ borderRadius: 28, padding: 18, marginBottom: 16, backgroundColor: COLORS.white, borderWidth: 1, borderColor: '#e6edf5', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.08, shadowRadius: 14, elevation: 3 }}>
+            <View style={{ borderRadius: 28, padding: 18, marginBottom: 16, backgroundColor: COLORS.white, borderWidth: 1, borderColor: '#e6edf5', boxShadow: '0px 8px 14px rgba(0, 0, 0, 0.08)', elevation: 3 }}>
               <Text style={{ fontSize: 36, fontWeight: '900', color: COLORS.textPrimary, letterSpacing: 0.2, lineHeight: 40 }}>
                 Subjects
               </Text>

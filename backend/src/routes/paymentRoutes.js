@@ -20,7 +20,54 @@ const validObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 const requireBookingAccess = (booking, userId) =>
   String(booking.student) === String(userId) || String(booking.tutor) === String(userId);
 
+router.get("/history", protectRoute, async (req, res) => {
+  try {
+    let query = {};
+    const role = String(req.user.role || "").toLowerCase();
+
+    if (role === "student") {
+      // Find all bookings for this student
+      const bookings = await BookingRequest.find({ student: req.user._id }).select("_id");
+      const bookingIds = bookings.map((b) => b._id);
+      query = { sessionId: { $in: bookingIds } };
+    } else if (role === "tutor") {
+      // Find all bookings for this tutor
+      const bookings = await BookingRequest.find({ tutor: req.user._id }).select("_id");
+      const bookingIds = bookings.map((b) => b._id);
+      query = { sessionId: { $in: bookingIds } };
+    } else if (role === "admin") {
+      // Admin sees everything
+      query = {};
+    } else {
+      return res.status(403).json({ message: "Invalid role for payment history" });
+    }
+
+    const payments = await Payment.find(query)
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "sessionId",
+        select: "subject sessionDate sessionTime price priceType student tutor studentName tutorName status",
+        populate: [
+          { path: "student", select: "username email profileImage" },
+          { path: "tutor", select: "username email profileImage tutorProfile.fullName" },
+        ],
+      })
+      .lean();
+
+    const result = payments.map((p) => ({
+      ...buildPaymentSnapshot(p),
+      session: p.sessionId,
+    }));
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error loading payment history:", error);
+    return res.status(500).json({ message: "Internal Server error", error: error.message });
+  }
+});
+
 router.post("/:bookingId/hold", protectRoute, async (req, res) => {
+
   try {
     if (req.user.role !== "student") {
       return res.status(403).json({ message: "Only students can initiate payment hold" });
@@ -347,8 +394,10 @@ router.patch("/admin/:paymentId/release", protectRoute, async (req, res) => {
       return res.status(404).json({ message: "Payment not found" });
     }
 
-    if (payment.status !== "disputed") {
-      return res.status(400).json({ message: "Only disputed payments can be released" });
+    const canRelease = payment.status === "disputed" || (payment.status === "pending" && payment.tutorConfirmed === true);
+
+    if (!canRelease) {
+      return res.status(400).json({ message: "Payment can only be released if disputed or completed by tutor" });
     }
 
     const booking = await BookingRequest.findById(payment.sessionId);
@@ -455,4 +504,37 @@ router.get("/:bookingId/logs", protectRoute, async (req, res) => {
   }
 });
 
+
+router.get("/admin/dashboard-stats", protectRoute, async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only admins can view dashboard stats" });
+    }
+
+    const [tutorCount, studentCount, activeSessions, revenueData] = await Promise.all([
+      mongoose.model("User").countDocuments({ role: "tutor" }),
+      mongoose.model("User").countDocuments({ role: "student" }),
+      BookingRequest.countDocuments({ status: { $in: ["funds_held", "completed_by_tutor", "disputed"] } }),
+      Payment.aggregate([
+        { $match: { status: "released" } },
+        { $group: { _id: null, total: { $sum: "$amount" } } },
+      ]),
+    ]);
+
+    const totalRevenue = revenueData.length > 0 ? revenueData[0].total : 0;
+
+    return res.status(200).json({
+      tutors: tutorCount,
+      students: studentCount,
+      activeSessions,
+      revenue: totalRevenue,
+    });
+  } catch (error) {
+    console.error("Error loading dashboard stats:", error);
+    return res.status(500).json({ message: "Internal Server error", error: error.message });
+  }
+});
+
 export default router;
+
+
