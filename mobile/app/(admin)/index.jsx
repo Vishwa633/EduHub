@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View, Platform } from "react-native";
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View, Platform, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { API_URL } from "../../constants/api";
@@ -35,6 +35,7 @@ export default function AdminHome() {
   const [latestPendingName, setLatestPendingName] = useState("");
   const [unreadAlertCount, setUnreadAlertCount] = useState(0);
   const [stats, setStats] = useState({ tutors: 0, students: 0, activeSessions: 0, revenue: 0 });
+  const [waveAnim] = useState(new Animated.Value(0));
 
   const styles = useMemo(() => StyleSheet.create({
     screen: {
@@ -43,8 +44,15 @@ export default function AdminHome() {
     },
     content: {
       padding: 16,
-      paddingTop: 56,
       paddingBottom: 28,
+    },
+    headerContainer: {
+      paddingHorizontal: 0,
+      paddingVertical: 16,
+      paddingBottom: 14,
+      backgroundColor: COLORS.background,
+      zIndex: 50,
+      elevation: 10,
     },
     topbar: {
       flexDirection: "row",
@@ -52,18 +60,23 @@ export default function AdminHome() {
       justifyContent: "space-between",
       marginBottom: 14,
       gap: 12,
+      paddingHorizontal: 16,
+      zIndex: 60,
     },
     topbarLeft: {
       flex: 1,
     },
     menuButton: {
-      width: 44,
-      height: 44,
-      borderRadius: 12,
+      width: 60,
+      height: 60,
+      borderRadius: 16,
       alignItems: "center",
       justifyContent: "center",
-      marginRight: 8,
-      borderWidth: 1,
+      backgroundColor: COLORS.cardBackground,
+      borderWidth: 2,
+      borderColor: COLORS.primary,
+      zIndex: 70,
+      elevation: 12,
     },
     title: {
       color: COLORS.textPrimary,
@@ -94,14 +107,18 @@ export default function AdminHome() {
       backgroundColor: COLORS.cardBackground,
       borderWidth: 2,
       borderColor: COLORS.primary,
+      zIndex: 70,
+      elevation: 12,
     },
     hero: {
       borderRadius: 18,
       padding: 16,
+      paddingHorizontal: 20,
       backgroundColor: COLORS.cardBackground,
       borderWidth: 1,
       borderColor: COLORS.border,
       marginBottom: 14,
+      marginHorizontal: 12,
       shadowColor: COLORS.black,
       shadowOpacity: 0.04,
       shadowRadius: 10,
@@ -241,6 +258,10 @@ export default function AdminHome() {
       fontSize: 12,
       marginTop: 3,
     },
+    waveHand: {
+      fontSize: 28,
+      marginLeft: 8,
+    },
     table: {
       borderRadius: 16,
       borderWidth: 1,
@@ -371,6 +392,23 @@ export default function AdminHome() {
     loadOverview(false);
   }, [loadOverview]);
 
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(waveAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: false,
+        }),
+        Animated.timing(waveAnim, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: false,
+        }),
+      ]),
+    ).start();
+  }, [waveAnim]);
+
   useFocusEffect(
     useCallback(() => {
       loadOverview(false);
@@ -437,40 +475,63 @@ export default function AdminHome() {
   }
 
   return (
+    <>
     <ScrollView
       style={styles.screen}
       contentContainerStyle={styles.content}
+      stickyHeaderIndices={[0]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadOverview(true)} tintColor={COLORS.primary} colors={[COLORS.primary]} />}
     >
-      <View style={styles.topbar}>
-        <View style={styles.topbarLeft}>
-          <TouchableOpacity activeOpacity={0.85} onPress={() => setSidebarOpen(true)} style={[styles.menuButton, { backgroundColor: COLORS.cardBackground, borderColor: COLORS.border }]}>
-            <Ionicons name="menu-outline" size={22} color={COLORS.primary} />
+      <View style={styles.headerContainer}>
+        <View style={styles.topbar}>
+          <View style={styles.topbarLeft}>
+          <TouchableOpacity activeOpacity={0.85} onPress={() => setSidebarOpen(true)} style={styles.menuButton}>
+            <Ionicons name="menu-outline" size={24} color={COLORS.primary} />
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity activeOpacity={0.85} onPress={openNotifications} style={styles.iconButton}>
+            <Ionicons name="notifications-outline" size={24} color={COLORS.primary} />
+            {unreadAlertCount > 0 ? (
+              <View style={{ position: "absolute", top: 4, right: 4, minWidth: 16, height: 16, borderRadius: 999, backgroundColor: COLORS.primary, alignItems: "center", justifyContent: "center", paddingHorizontal: 3 }}>
+                <Text style={{ color: COLORS.white, fontSize: 8, fontWeight: "900" }}>{unreadAlertCount > 9 ? "9+" : unreadAlertCount}</Text>
+              </View>
+            ) : null}
           </TouchableOpacity>
         </View>
-        <TouchableOpacity activeOpacity={0.85} onPress={openNotifications} style={[styles.iconButton]}>
-          <Ionicons name="notifications-outline" size={28} color={COLORS.primary} />
-          {unreadAlertCount > 0 ? (
-            <View style={{ position: "absolute", top: 4, right: 4, minWidth: 16, height: 16, borderRadius: 999, backgroundColor: COLORS.primary, alignItems: "center", justifyContent: "center", paddingHorizontal: 3 }}>
-              <Text style={{ color: COLORS.white, fontSize: 8, fontWeight: "900" }}>{unreadAlertCount > 9 ? "9+" : unreadAlertCount}</Text>
-            </View>
-          ) : null}
-        </TouchableOpacity>
-      </View>
 
-      <View style={styles.hero}>
-        <Text style={styles.heroTitle}>Welcome back, Admin</Text>
-        <Text style={styles.heroText}>
-          Manage sessions, tutors, and students from one place.
-        </Text>
-        <View style={styles.heroMeta}>
-          <View style={styles.metaPill}>
-            <Ionicons name="shield-checkmark-outline" size={14} color={COLORS.primary} />
-            <Text style={styles.metaPillText}>Admin</Text>
+        <View style={[styles.hero, { marginBottom: 0 }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={styles.heroTitle}>Welcome back, Admin</Text>
+            <Animated.Text
+              style={[
+                styles.waveHand,
+                {
+                  transform: [
+                    {
+                      rotate: waveAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0deg', '30deg'],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            >
+              👋
+            </Animated.Text>
           </View>
-          <View style={styles.metaPill}>
-            <Ionicons name="hourglass-outline" size={14} color={COLORS.primary} />
-            <Text style={styles.metaPillText}>{pendingTutorCount} Pending Tutors</Text>
+          <Text style={styles.heroText}>
+            Manage sessions, tutors, and students from one place.
+          </Text>
+          <View style={styles.heroMeta}>
+            <View style={styles.metaPill}>
+              <Ionicons name="shield-checkmark-outline" size={14} color={COLORS.primary} />
+              <Text style={styles.metaPillText}>Admin</Text>
+            </View>
+            <View style={styles.metaPill}>
+              <Ionicons name="hourglass-outline" size={14} color={COLORS.primary} />
+              <Text style={styles.metaPillText}>{pendingTutorCount} Pending Tutors</Text>
+            </View>
           </View>
         </View>
       </View>
@@ -518,14 +579,16 @@ export default function AdminHome() {
         </TouchableOpacity>
       </View>
 
-      <AdminSidebar
-        visible={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        actions={{ openSessions, openUserDetails, openPendingTutors, openNotifications, openPayments: (f) => router.push("/(admin)/payments"), onLogout }}
-        user={user}
-        pendingTutorCount={pendingTutorCount}
-        unreadAlertCount={unreadAlertCount}
-      />
     </ScrollView>
+
+    <AdminSidebar
+      visible={sidebarOpen}
+      onClose={() => setSidebarOpen(false)}
+      actions={{ openSessions, openUserDetails, openPendingTutors, openNotifications, openPayments: (f) => router.push("/(admin)/payments"), onLogout }}
+      user={user}
+      pendingTutorCount={pendingTutorCount}
+      unreadAlertCount={unreadAlertCount}
+    />
+    </>
   );
 }

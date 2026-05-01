@@ -18,7 +18,6 @@ export default function AdminSidebar({ visible, onClose, actions = {}, user = {}
 
   return (
     <View style={styles.overlay} pointerEvents="box-none">
-      <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={onClose} />
       <View style={[styles.panel, { backgroundColor: COLORS.cardBackground, borderColor: COLORS.border }]}>
         <View style={styles.header}>
           <View style={styles.userInfo}>
@@ -30,27 +29,28 @@ export default function AdminSidebar({ visible, onClose, actions = {}, user = {}
               <Text style={[styles.userRole, { color: COLORS.textSecondary }]}>Administrator</Text>
             </View>
           </View>
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+          <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.6}>
             <Ionicons name="close" size={22} color={COLORS.textSecondary} />
           </TouchableOpacity>
         </View>
 
         <View style={styles.menu}>
           {items.map((it) => (
-            <TouchableOpacity key={it.key} style={[styles.menuItem, { borderColor: COLORS.border }]} onPress={it.onPress}>
-              <Ionicons name={it.icon} size={20} color={COLORS.primary} />
+            <TouchableOpacity key={it.key} style={[styles.menuItem, { borderColor: COLORS.border }]} onPress={it.onPress} activeOpacity={0.7}>
+              <Ionicons name={it.icon} size={22} color={COLORS.primary} />
               <Text style={[styles.menuLabel, { color: COLORS.textPrimary }]}>{it.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
         <View style={styles.footer}>
-          <TouchableOpacity style={[styles.logout, { borderColor: COLORS.border }]} onPress={() => { onClose(); actions.onLogout?.(); }}>
-            <Ionicons name="log-out-outline" size={18} color={COLORS.primary} />
+          <TouchableOpacity style={[styles.logout, { borderColor: COLORS.border }]} onPress={() => { onClose(); actions.onLogout?.(); }} activeOpacity={0.7}>
+            <Ionicons name="log-out-outline" size={22} color={COLORS.primary} />
             <Text style={[styles.logoutText, { color: COLORS.textPrimary }]}>Logout</Text>
           </TouchableOpacity>
         </View>
       </View>
+      <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={onClose} />
     </View>
   );
 }
@@ -70,29 +70,33 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.35)",
   },
   panel: {
-    width: 280,
-    paddingTop: 48,
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-    borderLeftWidth: 1,
+    width: 320,
+    paddingTop: 56,
+    paddingHorizontal: 18,
+    paddingBottom: 28,
+    borderRightWidth: 1,
     shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 18,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 14,
+    borderColor: COLORS.border,
   },
   userInfo: {
     flexDirection: "row",
     alignItems: "center",
   },
   avatar: {
-    width: 46,
-    height: 46,
-    borderRadius: 12,
+    width: 54,
+    height: 54,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
@@ -109,33 +113,34 @@ const styles = StyleSheet.create({
     padding: 6,
   },
   menu: {
-    marginTop: 6,
+    marginTop: 12,
   },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    paddingRight: 8,
+    gap: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderRadius: 12,
   },
   menuLabel: {
-    fontSize: 15,
-    fontWeight: "800",
-    marginLeft: 10,
+    fontSize: 16,
+    fontWeight: "900",
+    marginLeft: 12,
   },
   footer: {
     marginTop: 16,
-    borderTopWidth: 1,
-    paddingTop: 12,
+    paddingTop: 0,
   },
   logout: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    paddingVertical: 10,
-    borderRadius: 10,
-    paddingHorizontal: 8,
+    gap: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderRadius: 12,
     borderWidth: 1,
   },
   logoutText: {

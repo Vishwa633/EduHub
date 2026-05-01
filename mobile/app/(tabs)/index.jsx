@@ -32,9 +32,10 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [unreadAlertCount, setUnreadAlertCount] = useState(0);
+  const [waveAnim] = useState(new Animated.Value(0));
   const [subjectQuery, setSubjectQuery] = useState("");
   const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
-  const menuTranslateX = useRef(new Animated.Value(-280)).current;
+  const menuTranslateX = useRef(new Animated.Value(-320)).current;
   const isPendingTutor = user?.role === "tutor" && user?.approvalStatus === "pending";
   const isTutor = user?.role === "tutor";
   const isStudent = user?.role === "student";
@@ -112,6 +113,15 @@ export default function Home() {
     loadUnreadAlerts();
   }, [loadUnreadAlerts]);
 
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(waveAnim, { toValue: 1, duration: 600, useNativeDriver: false }),
+        Animated.timing(waveAnim, { toValue: 0, duration: 600, useNativeDriver: false }),
+      ])
+    ).start();
+  }, [waveAnim]);
+
   useFocusEffect(
     useCallback(() => {
       loadUnreadAlerts();
@@ -129,7 +139,7 @@ export default function Home() {
 
   const closeSideMenu = useCallback(() => {
     Animated.timing(menuTranslateX, {
-      toValue: -280,
+      toValue: -320,
       duration: 180,
       useNativeDriver: true,
     }).start(() => setIsSideMenuOpen(false));
@@ -169,6 +179,17 @@ export default function Home() {
           >
             <Ionicons name="menu-outline" size={25} color={COLORS.primary} />
           </TouchableOpacity>
+
+          <View style={{ flex: 1, alignItems: 'center' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ color: COLORS.textPrimary, fontWeight: '900', fontSize: 22 }}>
+                Hi, {user?.username || user?.fullName || 'there'}
+              </Text>
+              <Animated.Text style={{ marginLeft: 8, fontSize: 28, transform: [{ rotate: waveAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '30deg'] }) }] }}>
+                👋
+              </Animated.Text>
+            </View>
+          </View>
 
           <TouchableOpacity
             onPress={() =>
@@ -217,17 +238,17 @@ export default function Home() {
         <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.35)" }} onPress={closeSideMenu}>
           <Animated.View
             style={{
-              width: 270,
+              width: 320,
               height: "100%",
               backgroundColor: COLORS.cardBackground,
               borderRightWidth: 1,
               borderRightColor: COLORS.border,
-              paddingTop: 46,
-              paddingHorizontal: 14,
+              paddingTop: 56,
+              paddingHorizontal: 18,
               transform: [{ translateX: menuTranslateX }],
             }}
           >
-            <Text style={{ color: COLORS.textPrimary, fontSize: 20, fontWeight: "900", marginBottom: 16 }}>
+            <Text style={{ color: COLORS.textPrimary, fontSize: 22, fontWeight: "900", marginBottom: 18 }}>
               Quick Menu
             </Text>
 
@@ -238,15 +259,15 @@ export default function Home() {
                 borderWidth: 1,
                 borderColor: COLORS.border,
                 backgroundColor: COLORS.inputBackground,
-                paddingVertical: 12,
-                paddingHorizontal: 12,
+                paddingVertical: 16,
+                paddingHorizontal: 14,
                 flexDirection: "row",
                 alignItems: "center",
-                gap: 10,
+                gap: 14,
               }}
             >
-              <Ionicons name="heart-outline" size={20} color={COLORS.primary} />
-              <Text style={{ color: COLORS.textPrimary, fontWeight: "800", fontSize: 14 }}>Favourites</Text>
+              <Ionicons name="heart-outline" size={22} color={COLORS.primary} />
+              <Text style={{ color: COLORS.textPrimary, fontWeight: "900", fontSize: 16 }}>Favourites</Text>
             </TouchableOpacity>
 
             {!isTutor && (
@@ -260,16 +281,16 @@ export default function Home() {
                   borderWidth: 1,
                   borderColor: COLORS.border,
                   backgroundColor: COLORS.inputBackground,
-                  paddingVertical: 12,
-                  paddingHorizontal: 12,
+                  paddingVertical: 16,
+                  paddingHorizontal: 14,
                   flexDirection: "row",
                   alignItems: "center",
-                  gap: 10,
-                  marginTop: 10
+                  gap: 14,
+                  marginTop: 12
                 }}
               >
-                <Ionicons name="library-outline" size={20} color={COLORS.primary} />
-                <Text style={{ color: COLORS.textPrimary, fontWeight: "800", fontSize: 14 }}>Learning Materials</Text>
+                <Ionicons name="library-outline" size={22} color={COLORS.primary} />
+                <Text style={{ color: COLORS.textPrimary, fontWeight: "900", fontSize: 16 }}>Learning Materials</Text>
               </TouchableOpacity>
             )}
 
@@ -296,16 +317,16 @@ export default function Home() {
                 borderWidth: 1,
                 borderColor: COLORS.border,
                 backgroundColor: COLORS.inputBackground,
-                paddingVertical: 12,
-                paddingHorizontal: 12,
+                paddingVertical: 16,
+                paddingHorizontal: 14,
                 flexDirection: "row",
                 alignItems: "center",
-                gap: 10,
-                marginTop: 10
+                gap: 14,
+                marginTop: 12
               }}
             >
-              <Ionicons name="log-out-outline" size={20} color="#f97316" />
-              <Text style={{ color: "#f97316", fontWeight: "800", fontSize: 14 }}>Logout</Text>
+              <Ionicons name="log-out-outline" size={22} color="#f97316" />
+              <Text style={{ color: "#f97316", fontWeight: "900", fontSize: 16 }}>Logout</Text>
             </TouchableOpacity>
           </Animated.View>
         </Pressable>
