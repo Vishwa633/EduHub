@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons, FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { API_URL } from "../../constants/api";
 import { useAuthStore } from "../../store/authStore";
@@ -847,11 +846,11 @@ export default function BookingPaymentPage() {
                     </View>
                     <View style={styles.cardBrandRow}>
                       <View style={styles.brandPill}>
-                        <MaterialCommunityIcons name="visa" size={16} color="#1d4ed8" />
+                        <FontAwesome name="cc-visa" size={16} color="#1d4ed8" />
                         <Text style={styles.brandLabel}>Visa</Text>
                       </View>
                       <View style={styles.brandPill}>
-                        <MaterialCommunityIcons name="mastercard" size={16} color="#ea580c" />
+                        <FontAwesome name="cc-mastercard" size={16} color="#ea580c" />
                         <Text style={styles.brandLabel}>MasterCard</Text>
                       </View>
                     </View>

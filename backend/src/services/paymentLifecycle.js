@@ -50,6 +50,9 @@ export const createEscrowPaymentForBooking = async ({ booking, actorId }) => {
 
   const payment = await Payment.create({
     sessionId: booking._id,
+    student: booking.student,
+    tutor: booking.tutor,
+    type: "session",
     amount: Number(booking.price || 0),
     status: "pending",
     autoReleaseAt: buildReleaseDeadline(new Date()),

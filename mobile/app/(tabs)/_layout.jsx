@@ -2,11 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '../../hooks/useColors';
+import { useAuthStore } from '../../store/authStore';
 
 export default function TabLayout() {
   const COLORS = useColors();
+  const { user } = useAuthStore();
     const insets = useSafeAreaInsets();
     const bottomInset = Number.isFinite(insets?.bottom) ? insets.bottom : 0;
+    const isTutor = user?.role === 'tutor';
 
   return (
         <Tabs
@@ -71,9 +74,21 @@ export default function TabLayout() {
             />
 
             <Tabs.Screen
+                name="materials"
+                options={{
+                    title: 'Materials',
+                    href: isTutor ? null : undefined,
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name='library-outline' size={size} color={color} />
+                    ),
+                }}
+            />
+
+            <Tabs.Screen
                 name="inquiries"
                 options={{
                     title: 'Help',
+                    href: isTutor ? null : undefined,
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name='help-circle-outline' size={size} color={color} />
                     ),

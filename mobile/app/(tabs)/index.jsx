@@ -8,6 +8,8 @@ import {
   Modal,
   Pressable,
   Animated,
+  Alert,
+  Platform,
 } from "react-native";
 import { useAuthStore } from "../../store/authStore";
 
@@ -22,7 +24,7 @@ import { useColors } from "../../hooks/useColors";
 export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export default function Home() {
-  const { token, user } = useAuthStore();
+  const { token, user, logout } = useAuthStore();
   const COLORS = useColors();
   const router = useRouter();
   const [subjects, setSubjects] = useState([]);
@@ -245,6 +247,65 @@ export default function Home() {
             >
               <Ionicons name="heart-outline" size={20} color={COLORS.primary} />
               <Text style={{ color: COLORS.textPrimary, fontWeight: "800", fontSize: 14 }}>Favourites</Text>
+            </TouchableOpacity>
+
+            {!isTutor && (
+              <TouchableOpacity
+                onPress={() => {
+                  closeSideMenu();
+                  router.push("/(tabs)/materials");
+                }}
+                style={{
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: COLORS.border,
+                  backgroundColor: COLORS.inputBackground,
+                  paddingVertical: 12,
+                  paddingHorizontal: 12,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                  marginTop: 10
+                }}
+              >
+                <Ionicons name="library-outline" size={20} color={COLORS.primary} />
+                <Text style={{ color: COLORS.textPrimary, fontWeight: "800", fontSize: 14 }}>Learning Materials</Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              onPress={() => {
+                closeSideMenu();
+                if (Platform.OS === 'web') {
+                  if (window.confirm("Are you sure you want to logout?")) {
+                    logout();
+                  }
+                  return;
+                }
+                Alert.alert("Logout", "Are you sure you want to logout?", [
+                  { text: "Cancel", style: "cancel" },
+                  { 
+                    text: "Logout", 
+                    style: "destructive",
+                    onPress: () => logout() 
+                  },
+                ]);
+              }}
+              style={{
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: COLORS.border,
+                backgroundColor: COLORS.inputBackground,
+                paddingVertical: 12,
+                paddingHorizontal: 12,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 10,
+                marginTop: 10
+              }}
+            >
+              <Ionicons name="log-out-outline" size={20} color="#f97316" />
+              <Text style={{ color: "#f97316", fontWeight: "800", fontSize: 14 }}>Logout</Text>
             </TouchableOpacity>
           </Animated.View>
         </Pressable>

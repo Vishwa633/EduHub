@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { API_URL } from "../../constants/api";
@@ -372,12 +372,34 @@ export default function AdminHome() {
   const openNotifications = () => router.push("/(admin)/notifications");
 
   const onLogout = async () => {
-    try {
-      await logout();
-      router.replace("/(auth)");
-    } catch (_error) {
-      Alert.alert("Error", "Unable to logout");
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm("Are you sure you want to logout?");
+      if (confirmed) {
+        try {
+          await logout();
+          router.replace("/(auth)");
+        } catch (_error) {
+          alert("Unable to logout");
+        }
+      }
+      return;
     }
+
+    Alert.alert("Logout", "Are you sure you want to logout?", [
+      { text: "Cancel", style: "cancel" },
+      { 
+        text: "Logout", 
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await logout();
+            router.replace("/(auth)");
+          } catch (_error) {
+            Alert.alert("Error", "Unable to logout");
+          }
+        }
+      },
+    ]);
   };
 
   const primaryStats = [
