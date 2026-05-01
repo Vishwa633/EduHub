@@ -86,11 +86,33 @@ export default function Profile() {
                 borderRadius: 10,
                 paddingVertical: 11,
                 alignItems: "center",
+                marginBottom: 10,
               }}
               onPress={() => router.push("/(tabs)/edit-profile")}
             >
               <Text style={{ color: COLORS.white, fontWeight: "700" }}>Edit Profile</Text>
             </TouchableOpacity>
+
+            {user?.role === "tutor" && (
+              <TouchableOpacity
+                style={{
+                  backgroundColor: COLORS.white,
+                  borderRadius: 10,
+                  paddingVertical: 11,
+                  alignItems: "center",
+                  borderWidth: 1,
+                  borderColor: COLORS.primary,
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  gap: 8,
+                  marginBottom: 10,
+                }}
+                onPress={() => router.push("/tutor/materials")}
+              >
+                <Ionicons name="library-outline" size={18} color={COLORS.primary} />
+                <Text style={{ color: COLORS.primary, fontWeight: "700" }}>Manage Materials</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <LogoutButton />

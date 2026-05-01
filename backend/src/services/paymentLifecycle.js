@@ -50,6 +50,9 @@ export const createEscrowPaymentForBooking = async ({ booking, actorId }) => {
 
   const payment = await Payment.create({
     sessionId: booking._id,
+    student: booking.student,
+    tutor: booking.tutor,
+    type: "session",
     amount: Number(booking.price || 0),
     status: "pending",
     autoReleaseAt: buildReleaseDeadline(new Date()),
@@ -102,6 +105,24 @@ export const markTutorCompleted = async ({ booking, payment, tutorId }) => {
     message: "Tutor marked this session as completed. Confirm or report a problem.",
     level: "info",
   });
+
+  // Notify Admins
+  const admins = await User.find({ role: "admin" }).select("_id").lean();
+  if (admins.length) {
+    await Promise.all(
+      admins.map((admin) =>
+        pushNotification({
+          userId: admin._id,
+          bookingId: booking._id,
+          paymentId: payment._id,
+          type: "system",
+          title: "Payment release required",
+          message: `Tutor ${booking.tutorName} completed session for ${booking.studentName}. Please release the payment.`,
+          level: "info",
+        })
+      )
+    );
+  }
 
   return payment;
 };

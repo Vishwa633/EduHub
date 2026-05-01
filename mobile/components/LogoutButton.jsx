@@ -1,4 +1,4 @@
-import { Text, TouchableOpacity, Alert } from "react-native";
+import { Text, TouchableOpacity, Alert, Platform } from "react-native";
 import { useAuthStore } from "../store/authStore";
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "../hooks/useColors";
@@ -19,6 +19,13 @@ export default function LogoutButton() {
   };
 
   const confirmLogout = () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm("Are you sure you want to logout?")) {
+        logout();
+      }
+      return;
+    }
+
     Alert.alert("Logout", "Are you sure you want to logout?", [
       { text: "Cancel", style: "cancel" },
       { text: "Logout", onPress: handleLogout, style: "destructive" },

@@ -5,8 +5,31 @@ const paymentSchema = new mongoose.Schema(
     sessionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "BookingRequest",
+      required: false,
+      index: true,
+    },
+    material: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Material",
+      required: false,
+      index: true,
+    },
+    type: {
+      type: String,
+      enum: ["session", "material"],
+      default: "session",
+      index: true,
+    },
+    student: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
-      unique: true,
+      index: true,
+    },
+    tutor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
       index: true,
     },
     amount: {
