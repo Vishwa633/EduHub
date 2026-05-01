@@ -113,19 +113,23 @@ export default function PendingTutorsPage() {
   }, [token, user?.role]);
 
   const confirmAccept = (tutor) => {
+    const id = tutor?._id || tutor?.id;
+    if (!id) return;
+
     Alert.alert(
       "Accept tutor",
       `Approve ${tutor?.tutorProfile?.fullName || tutor?.username || "this tutor"}?`,
       [
         { text: "Cancel", style: "cancel" },
-        { text: "Accept", onPress: () => reviewTutor(tutor._id, "accept") },
+        { text: "Accept", onPress: () => reviewTutor(id, "accept") },
       ],
     );
   };
 
   const confirmReject = () => {
-    if (!rejectTutor?._id) return;
-    reviewTutor(rejectTutor._id, "reject", rejectReason);
+    const id = rejectTutor?._id || rejectTutor?.id;
+    if (!id) return;
+    reviewTutor(id, "reject", rejectReason);
   };
 
   const styles = useMemo(() => StyleSheet.create({

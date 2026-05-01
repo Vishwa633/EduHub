@@ -243,11 +243,13 @@ router.get('/admin/pending-tutors', protectRoute, async (req, res) => {
             return res.status(403).json({ message: 'Only admins can view pending tutors' });
         }
 
+        console.log("🔍 Fetching pending tutors for admin:", req.user.username);
         const tutors = await User.find({ role: 'tutor', approvalStatus: 'pending' })
-            .select('_id username email profileImage isActive approvalStatus rejectionReason tutorProfile.fullName tutorProfile.subject tutorProfile.bio tutorProfile.mobileNumber tutorProfile.availability tutorProfile.age tutorProfile.price tutorProfile.priceType tutorProfile.experienceLevel tutorProfile.yearsOfExperience tutorProfile.kyc createdAt')
+            .select('_id username email profileImage isActive approvalStatus rejectionReason tutorProfile.fullName tutorProfile.subject tutorProfile.bio tutorProfile.mobileNumber tutorProfile.availability tutorProfile.age tutorProfile.price tutorProfile.priceType tutorProfile.experienceLevel tutorProfile.kyc createdAt')
             .sort({ createdAt: -1 })
             .lean();
 
+        console.log(`✅ Found ${tutors.length} pending tutors`);
         return res.status(200).json({ tutors });
     } catch (error) {
         console.error('❌ Error fetching pending tutors:', error);
