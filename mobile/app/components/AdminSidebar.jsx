@@ -19,7 +19,7 @@ export default function AdminSidebar({ visible, onClose, actions = {}, user = {}
   return (
     <View style={styles.overlay} pointerEvents="box-none">
       <View style={[styles.panel, { backgroundColor: COLORS.cardBackground, borderColor: COLORS.border }]}>
-        <View style={styles.header}>
+        <View style={[styles.header, { borderColor: COLORS.border }]}>
           <View style={styles.userInfo}>
             <View style={[styles.avatar, { backgroundColor: COLORS.inputBackground, borderColor: COLORS.border }]}>
               <Ionicons name="person-outline" size={20} color={COLORS.primary} />
@@ -33,20 +33,34 @@ export default function AdminSidebar({ visible, onClose, actions = {}, user = {}
             <Ionicons name="close" size={22} color={COLORS.textSecondary} />
           </TouchableOpacity>
         </View>
+        <Text style={[styles.title, { color: COLORS.textPrimary }]}>Quick Menu</Text>
 
         <View style={styles.menu}>
           {items.map((it) => (
-            <TouchableOpacity key={it.key} style={[styles.menuItem, { borderColor: COLORS.border }]} onPress={it.onPress} activeOpacity={0.7}>
-              <Ionicons name={it.icon} size={22} color={COLORS.primary} />
+            <TouchableOpacity
+              key={it.key}
+              style={[styles.menuItem, { borderColor: COLORS.border, backgroundColor: COLORS.white }]}
+              onPress={it.onPress}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.iconWrap, { borderColor: COLORS.border, backgroundColor: COLORS.inputBackground }]}> 
+                <Ionicons name={it.icon} size={18} color={COLORS.primary} />
+              </View>
               <Text style={[styles.menuLabel, { color: COLORS.textPrimary }]}>{it.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
         <View style={styles.footer}>
-          <TouchableOpacity style={[styles.logout, { borderColor: COLORS.border }]} onPress={() => { onClose(); actions.onLogout?.(); }} activeOpacity={0.7}>
-            <Ionicons name="log-out-outline" size={22} color={COLORS.primary} />
-            <Text style={[styles.logoutText, { color: COLORS.textPrimary }]}>Logout</Text>
+          <TouchableOpacity
+            style={[styles.logout, { borderColor: COLORS.border, backgroundColor: COLORS.white }]}
+            onPress={() => { onClose(); actions.onLogout?.(); }}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.iconWrap, { borderColor: COLORS.border, backgroundColor: COLORS.inputBackground }]}>
+              <Ionicons name="log-out-outline" size={18} color={COLORS.primary} />
+            </View>
+            <Text style={[styles.logoutText, { color: COLORS.primary }]}>Logout</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -87,7 +101,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 14,
     padding: 14,
-    borderColor: COLORS.border,
   },
   userInfo: {
     flexDirection: "row",
@@ -114,6 +127,19 @@ const styles = StyleSheet.create({
   },
   menu: {
     marginTop: 12,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "900",
+    marginBottom: 10,
+  },
+  iconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
   },
   menuItem: {
     flexDirection: "row",
