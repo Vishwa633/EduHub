@@ -13,6 +13,7 @@ export default function AdminSidebar({ visible, onClose, actions = {}, user = {}
     { key: "users", label: "Users", icon: "people-outline", onPress: () => { onClose(); actions.openUserDetails?.(); } },
     { key: "pending", label: `Pending (${pendingTutorCount})`, icon: "time-outline", onPress: () => { onClose(); actions.openPendingTutors?.(); } },
     { key: "payments", label: "Payments", icon: "cash-outline", onPress: () => { onClose(); actions.openPayments?.(); } },
+    { key: "inquiries", label: "Inquiries", icon: "help-circle-outline", onPress: () => { onClose(); actions.openInquiries?.(); } },
     { key: "notifications", label: `Notifications (${unreadAlertCount})`, icon: "notifications-outline", onPress: () => { onClose(); actions.openNotifications?.(); } },
   ];
 
@@ -87,7 +88,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 14,
     padding: 14,
-    borderColor: COLORS.border,
   },
   userInfo: {
     flexDirection: "row",

@@ -115,7 +115,6 @@ export default function TabLayout() {
             <Tabs.Screen name="notifications" options={{ href: null }} />
             <Tabs.Screen name="payment-success" options={{ href: null }} />
             <Tabs.Screen name="favourites" options={{ href: null }} />
-            <Tabs.Screen name="admin-disputes" options={{ href: null }} />
             <Tabs.Screen name="tutor/reviews" options={{ href: null }} />
 
         </Tabs>

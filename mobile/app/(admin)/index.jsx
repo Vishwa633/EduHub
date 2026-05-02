@@ -34,7 +34,7 @@ export default function AdminHome() {
   const [pendingTutorCount, setPendingTutorCount] = useState(0);
   const [latestPendingName, setLatestPendingName] = useState("");
   const [unreadAlertCount, setUnreadAlertCount] = useState(0);
-  const [stats, setStats] = useState({ tutors: 0, students: 0, activeSessions: 0, revenue: 0 });
+  const [stats, setStats] = useState({ tutors: 0, students: 0, activeSessions: 0, openInquiries: 0, revenue: 0 });
   const [waveAnim] = useState(new Animated.Value(0));
 
   const styles = useMemo(() => StyleSheet.create({
@@ -377,6 +377,7 @@ export default function AdminHome() {
           tutors: statsData.tutors || 0,
           students: statsData.students || 0,
           activeSessions: statsData.activeSessions || 0,
+          openInquiries: statsData.openInquiries || 0,
           revenue: statsData.revenue || 0,
         });
       }
@@ -455,6 +456,7 @@ export default function AdminHome() {
     { label: "Total Tutors", value: stats.tutors, icon: "school-outline" },
     { label: "Total Students", value: stats.students, icon: "people-outline" },
     { label: "Active Sessions", value: stats.activeSessions, icon: "pulse-outline" },
+    { label: "Open Inquiries", value: stats.openInquiries, icon: "help-circle-outline" },
     { label: "Revenue", value: formatCurrency(stats.revenue), icon: "wallet-outline" },
   ];
 
@@ -584,7 +586,7 @@ export default function AdminHome() {
     <AdminSidebar
       visible={sidebarOpen}
       onClose={() => setSidebarOpen(false)}
-      actions={{ openSessions, openUserDetails, openPendingTutors, openNotifications, openPayments: (f) => router.push("/(admin)/payments"), onLogout }}
+      actions={{ openSessions, openUserDetails, openPendingTutors, openNotifications, openPayments: (f) => router.push("/(admin)/payments"), openDisputes: () => router.push("/(admin)/admin-disputes"), openInquiries: () => router.push("/(admin)/admin-inquiries"), onLogout }}
       user={user}
       pendingTutorCount={pendingTutorCount}
       unreadAlertCount={unreadAlertCount}

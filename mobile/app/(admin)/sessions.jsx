@@ -244,7 +244,7 @@ export default function AdminSessionsPage() {
         </View>
 
         {String(item?.payment?.status || "") === "disputed" ? (
-          <TouchableOpacity style={styles.actionButton} onPress={() => router.push("/(tabs)/admin-disputes") }>
+          <TouchableOpacity style={styles.actionButton} onPress={() => router.push("/(admin)/admin-disputes") }>
             <Text style={styles.actionText}>Open Dispute Review</Text>
           </TouchableOpacity>
         ) : null}

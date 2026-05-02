@@ -210,4 +210,37 @@ router.patch("/:id/resolve", protectRoute, async (req, res) => {
     }
   });
 
+// Delete an inquiry
+router.delete("/:id", protectRoute, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!validObjectId(id)) {
+      return res.status(400).json({ message: "Invalid inquiry ID" });
+    }
+
+    const inquiry = await Inquiry.findById(id);
+    if (!inquiry) {
+      return res.status(404).json({ message: "Inquiry not found" });
+    }
+
+    const isAdmin = req.user.role === "admin";
+    const isOwner = String(inquiry.student) === String(req.user._id);
+
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ message: "Not authorized to delete" });
+    }
+
+    if (inquiry.status !== "resolved") {
+      return res.status(400).json({ message: "Only resolved inquiries can be deleted" });
+    }
+
+    await Inquiry.findByIdAndDelete(id);
+
+    return res.status(200).json({ message: "Inquiry deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting inquiry:", error);
+    return res.status(500).json({ message: "Internal Server error" });
+  }
+});
+
 export default router;
