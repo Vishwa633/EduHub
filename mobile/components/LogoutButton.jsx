@@ -2,10 +2,21 @@ import { Text, TouchableOpacity, Alert, Platform } from "react-native";
 import { useAuthStore } from "../store/authStore";
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "../hooks/useColors";
+import { useRouter } from "expo-router";
 
 export default function LogoutButton() {
   const { logout } = useAuthStore();
   const COLORS = useColors();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.replace("/(auth)");
+    } catch (error) {
+      Alert.alert("Error", "Unable to logout at this time");
+    }
+  };
 
   const confirmLogout = () => {
     if (Platform.OS === 'web') {
@@ -17,7 +28,7 @@ export default function LogoutButton() {
 
     Alert.alert("Logout", "Are you sure you want to logout?", [
       { text: "Cancel", style: "cancel" },
-      { text: "Logout", onPress: () => logout(), style: "destructive" },
+      { text: "Logout", onPress: handleLogout, style: "destructive" },
     ]);
   };
 

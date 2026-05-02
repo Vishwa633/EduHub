@@ -2,24 +2,11 @@ import { useState } from "react";
 import { Alert, ActivityIndicator, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import * as FileSystem from "expo-file-system";
+import { StorageAccessFramework, EncodingType, readAsStringAsync, writeAsStringAsync } from "expo-file-system";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { useColors } from "../../hooks/useColors";
 import { useAuthStore } from "../../store/authStore";
-
-const formatDateTime = (input) => {
-  if (!input) {
-    return new Date().toLocaleString();
-  }
-
-  const date = new Date(input);
-  if (Number.isNaN(date.getTime())) {
-    return new Date().toLocaleString();
-  }
-
-  return date.toLocaleString();
-};
 
 const escapeHtml = (value) =>
   String(value || "")
@@ -361,12 +348,12 @@ export default function PaymentSuccessScreen() {
       const fileName = `receipt-${safeReference}.pdf`;
 
       if (Platform.OS === "android") {
-        const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+        const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
         if (permissions.granted) {
-          const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
-          await FileSystem.StorageAccessFramework.createFileAsync(permissions.directoryUri, fileName, "application/pdf")
+          const base64 = await readAsStringAsync(uri, { encoding: EncodingType.Base64 });
+          await StorageAccessFramework.createFileAsync(permissions.directoryUri, fileName, "application/pdf")
             .then(async (safUri) => {
-              await FileSystem.writeAsStringAsync(safUri, base64, { encoding: FileSystem.EncodingType.Base64 });
+              await writeAsStringAsync(safUri, base64, { encoding: EncodingType.Base64 });
               Alert.alert("Sucess", "Receipt has been saved to your downloads.");
             });
         }

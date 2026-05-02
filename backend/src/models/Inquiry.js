@@ -14,7 +14,7 @@ const inquirySchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ["tutor", "academic", "payment", "session", "technical", "other"],
+      enum: ["tutor", "academic", "payment", "booking", "technical", "other"],
       default: "other",
       required: true,
     },
@@ -57,7 +57,7 @@ const inquirySchema = new mongoose.Schema(
       },
     ],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Inquiry = mongoose.model("Inquiry", inquirySchema);
