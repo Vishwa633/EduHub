@@ -111,6 +111,18 @@ export default function AdminLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="admin-disputes"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="admin-inquiries"
+        options={{
+          href: null,
+        }}
+      />
 
       <Tabs.Screen
         name="tutor/[id]"

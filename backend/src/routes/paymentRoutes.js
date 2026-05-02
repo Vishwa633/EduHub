@@ -511,10 +511,11 @@ router.get("/admin/dashboard-stats", protectRoute, async (req, res) => {
       return res.status(403).json({ message: "Only admins can view dashboard stats" });
     }
 
-    const [tutorCount, studentCount, activeSessions, revenueData] = await Promise.all([
+    const [tutorCount, studentCount, activeSessions, openInquiries, revenueData] = await Promise.all([
       mongoose.model("User").countDocuments({ role: "tutor" }),
       mongoose.model("User").countDocuments({ role: "student" }),
       BookingRequest.countDocuments({ status: { $in: ["funds_held", "completed_by_tutor", "disputed"] } }),
+      mongoose.model("Inquiry").countDocuments({ status: "open" }),
       Payment.aggregate([
         { $match: { status: "released" } },
         { $group: { _id: null, total: { $sum: "$amount" } } },
@@ -527,6 +528,7 @@ router.get("/admin/dashboard-stats", protectRoute, async (req, res) => {
       tutors: tutorCount,
       students: studentCount,
       activeSessions,
+      openInquiries,
       revenue: totalRevenue,
     });
   } catch (error) {

@@ -297,6 +297,28 @@ export default function Home() {
             <TouchableOpacity
               onPress={() => {
                 closeSideMenu();
+                router.push("/(tabs)/inquiries");
+              }}
+              style={{
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: COLORS.border,
+                backgroundColor: COLORS.inputBackground,
+                paddingVertical: 16,
+                paddingHorizontal: 14,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 14,
+                marginTop: 12
+              }}
+            >
+              <Ionicons name="help-circle-outline" size={22} color={COLORS.primary} />
+              <Text style={{ color: COLORS.textPrimary, fontWeight: "900", fontSize: 16 }}>Help Center</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => {
+                closeSideMenu();
                 if (Platform.OS === 'web') {
                   if (window.confirm("Are you sure you want to logout?")) {
                     logout();
