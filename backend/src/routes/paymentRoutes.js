@@ -11,6 +11,7 @@ import {
   markTutorCompleted,
   movePaymentToDispute,
   releasePayment,
+  withdrawDispute,
 } from "../services/paymentLifecycle.js";
 
 const router = express.Router();
@@ -272,6 +273,90 @@ router.patch("/:bookingId/report-problem", protectRoute, async (req, res) => {
     return res.status(200).json(buildPaymentSnapshot(payment));
   } catch (error) {
     console.error("Error reporting payment problem:", error);
+    return res.status(500).json({ message: "Internal Server error", error: error.message });
+  }
+});
+
+router.patch("/:bookingId/withdraw-report", protectRoute, async (req, res) => {
+  try {
+    if (req.user.role !== "student") {
+      return res.status(403).json({ message: "Only students can withdraw a report" });
+    }
+
+    const { bookingId } = req.params;
+    if (!validObjectId(bookingId)) {
+      return res.status(400).json({ message: "Invalid booking id" });
+    }
+
+    const booking = await BookingRequest.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (String(booking.student) !== String(req.user._id)) {
+      return res.status(403).json({ message: "Not authorized for this booking" });
+    }
+
+    const payment = await Payment.findOne({ sessionId: booking._id });
+    if (!payment || payment.status !== "disputed") {
+      return res.status(400).json({ message: "Disputed payment not found" });
+    }
+
+    await withdrawDispute({ booking, payment, actorId: req.user._id });
+    return res.status(200).json(buildPaymentSnapshot(payment));
+  } catch (error) {
+    console.error("Error withdrawing payment report:", error);
+    return res.status(500).json({ message: "Internal Server error", error: error.message });
+  }
+});
+
+router.patch("/:bookingId/edit-report", protectRoute, async (req, res) => {
+  try {
+    if (req.user.role !== "student") {
+      return res.status(403).json({ message: "Only students can edit a report" });
+    }
+
+    const { bookingId } = req.params;
+    const reason = String(req.body?.reason || "").trim();
+    if (!validObjectId(bookingId)) {
+      return res.status(400).json({ message: "Invalid booking id" });
+    }
+
+    if (!reason) {
+      return res.status(400).json({ message: "Problem reason is required" });
+    }
+
+    const booking = await BookingRequest.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (String(booking.student) !== String(req.user._id)) {
+      return res.status(403).json({ message: "Not authorized for this booking" });
+    }
+
+    const payment = await Payment.findOne({ sessionId: booking._id });
+    if (!payment || payment.status !== "disputed") {
+      return res.status(400).json({ message: "Disputed payment not found" });
+    }
+
+    booking.tutorMessage = reason;
+    await booking.save();
+
+    // Optionally update dispute action log
+    const PaymentActionLog = (await import("../models/PaymentActionLog.js")).default;
+    await PaymentActionLog.create({
+      payment: payment._id,
+      sessionId: booking._id,
+      actor: req.user._id,
+      actorRole: "student",
+      action: "payment_dispute_edited",
+      details: { newReason: reason },
+    });
+
+    return res.status(200).json({ message: "Report updated successfully" });
+  } catch (error) {
+    console.error("Error editing payment report:", error);
     return res.status(500).json({ message: "Internal Server error", error: error.message });
   }
 });

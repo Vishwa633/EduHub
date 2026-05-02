@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "expo-router";
 import { useAuthStore } from "../../store/authStore";
 import { useColors } from "../../hooks/useColors";
 import { API_URL } from "../../constants/api";
@@ -15,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Loader from "../../components/Loader";
 
 export default function Payments() {
+  const router = useRouter();
   const { token, user } = useAuthStore();
   const COLORS = useColors();
   const [payments, setPayments] = useState([]);
@@ -77,7 +79,9 @@ export default function Payments() {
             </Text>
           </View>
           <View style={[styles.statusBadge, { backgroundColor: statusInfo.bg }]}>
-            <Text style={[styles.statusText, { color: statusInfo.text }]}>{item.status?.toUpperCase()}</Text>
+            <Text style={[styles.statusText, { color: statusInfo.text }]}>
+              {item.status?.toLowerCase() === "pending" ? "PAID (HELD)" : item.status?.toUpperCase()}
+            </Text>
           </View>
         </View>
 
@@ -115,10 +119,22 @@ export default function Payments() {
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.background }}>
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: COLORS.textPrimary }]}>Payment History</Text>
-        <Text style={[styles.headerSubtitle, { color: COLORS.textSecondary }]}>
-          {user?.role === "admin" ? "All system transactions" : "Your recent transactions"}
-        </Text>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          <View>
+            <Text style={[styles.headerTitle, { color: COLORS.textPrimary }]}>Payment History</Text>
+            <Text style={[styles.headerSubtitle, { color: COLORS.textSecondary }]}>
+              {user?.role === "admin" ? "All system transactions" : "Your recent transactions"}
+            </Text>
+          </View>
+          {user?.role === "student" && (
+            <TouchableOpacity
+              onPress={() => router.push("/disputes")}
+              style={[styles.disputesButton, { borderColor: COLORS.primary }]}
+            >
+              <Ionicons name="list-outline" size={18} color={COLORS.primary} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       <FlatList
@@ -240,5 +256,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 8,
     paddingHorizontal: 40,
+  },
+  disputesButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
