@@ -1,12 +1,20 @@
-import { useState } from "react";
-import { Alert, ActivityIndicator, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useState, useLayoutEffect } from "react";
+import { Alert, ActivityIndicator, Platform, StyleSheet, Text, TouchableOpacity, View, Dimensions, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
 import * as FileSystem from "expo-file-system";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { useColors } from "../../hooks/useColors";
 import { useAuthStore } from "../../store/authStore";
+
+const { width: screenWidth } = Dimensions.get("window");
+
+const getResponsiveSize = (baseSize) => {
+  if (screenWidth < 360) return baseSize * 0.85;
+  if (screenWidth < 420) return baseSize * 0.92;
+  return baseSize;
+};
 
 const formatDateTime = (input) => {
   if (!input) {
@@ -29,54 +37,55 @@ const escapeHtml = (value) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
-  const sanitizeFileName = (value) => String(value || "receipt").replace(/[^a-zA-Z0-9_-]/g, "");
+const sanitizeFileName = (value) => String(value || "receipt").replace(/[^a-zA-Z0-9_-]/g, "");
 
-const createStyles = (themeColors) =>
-  StyleSheet.create({
+const createStyles = (themeColors) => {
+  return StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: themeColors.background,
     },
     headerGradient: {
-      paddingBottom: 40,
-      paddingTop: 60,
+      paddingBottom: getResponsiveSize(40),
+      paddingTop: getResponsiveSize(60),
       alignItems: "center",
       backgroundColor: themeColors.primary,
-      borderBottomLeftRadius: 32,
-      borderBottomRightRadius: 32,
+      borderBottomLeftRadius: getResponsiveSize(32),
+      borderBottomRightRadius: getResponsiveSize(32),
     },
     successIconWrap: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
+      width: getResponsiveSize(80),
+      height: getResponsiveSize(80),
+      borderRadius: getResponsiveSize(40),
       backgroundColor: "rgba(255, 255, 255, 0.2)",
       alignItems: "center",
       justifyContent: "center",
-      marginBottom: 16,
+      marginBottom: getResponsiveSize(16),
       borderWidth: 2,
       borderColor: "rgba(255, 255, 255, 0.4)",
     },
     successTitle: {
-      fontSize: 26,
+      fontSize: getResponsiveSize(26),
       fontWeight: "900",
       color: themeColors.white,
       textAlign: "center",
     },
     successSubtitle: {
-      fontSize: 14,
+      fontSize: getResponsiveSize(14),
       color: "rgba(255, 255, 255, 0.8)",
-      marginTop: 4,
+      marginTop: getResponsiveSize(4),
       textAlign: "center",
     },
     content: {
       flex: 1,
-      marginTop: -30,
-      paddingHorizontal: 20,
+      marginTop: getResponsiveSize(-30),
+      paddingHorizontal: getResponsiveSize(20),
+      paddingBottom: getResponsiveSize(20),
     },
     receiptCard: {
       backgroundColor: themeColors.cardBackground,
-      borderRadius: 24,
-      padding: 24,
+      borderRadius: getResponsiveSize(24),
+      padding: getResponsiveSize(24),
       borderWidth: 1,
       borderColor: themeColors.border,
       shadowColor: "#000",
@@ -89,29 +98,74 @@ const createStyles = (themeColors) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      marginBottom: 24,
+      marginBottom: getResponsiveSize(24),
       borderBottomWidth: 1,
       borderBottomColor: themeColors.border,
-      paddingBottom: 16,
+      paddingBottom: getResponsiveSize(16),
     },
     receiptLogo: {
-      fontSize: 20,
+      fontSize: getResponsiveSize(20),
       fontWeight: "900",
       color: themeColors.primary,
       letterSpacing: -0.5,
     },
     receiptStatus: {
-      fontSize: 12,
+      fontSize: getResponsiveSize(12),
       fontWeight: "800",
       color: "#059669",
       backgroundColor: "#ECFDF5",
-      paddingHorizontal: 10,
-      paddingVertical: 4,
+      paddingHorizontal: getResponsiveSize(10),
+      paddingVertical: getResponsiveSize(4),
       borderRadius: 99,
       textTransform: "uppercase",
     },
     receiptBody: {
-      gap: 16,
+      marginTop: getResponsiveSize(8),
+    },
+    tableHeader: {
+      backgroundColor: "#f8fafc",
+      flexDirection: "row",
+      paddingVertical: getResponsiveSize(12),
+      paddingHorizontal: getResponsiveSize(12),
+      borderBottomWidth: 2,
+      borderBottomColor: themeColors.primary,
+      borderRadius: getResponsiveSize(8),
+      marginBottom: 0,
+    },
+    tableHeaderLabel: {
+      flex: 1,
+      fontSize: getResponsiveSize(12),
+      fontWeight: "800",
+      color: themeColors.primary,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    },
+    tableRow: {
+      flexDirection: screenWidth < 400 ? "column" : "row",
+      paddingVertical: getResponsiveSize(12),
+      paddingHorizontal: getResponsiveSize(12),
+      borderBottomWidth: 1,
+      borderBottomColor: "#e2e8f0",
+      alignItems: screenWidth < 400 ? "flex-start" : "center",
+    },
+    tableCell: {
+      flex: 1,
+      paddingRight: getResponsiveSize(8),
+      width: screenWidth < 400 ? "100%" : "auto",
+      marginBottom: screenWidth < 400 ? getResponsiveSize(8) : 0,
+    },
+    tableCellLabel: {
+      fontSize: getResponsiveSize(11),
+      fontWeight: "600",
+      color: themeColors.textSecondary,
+      marginBottom: getResponsiveSize(4),
+      textTransform: "uppercase",
+      letterSpacing: 0.3,
+    },
+    tableCellValue: {
+      fontSize: getResponsiveSize(14),
+      fontWeight: "700",
+      color: themeColors.textPrimary,
     },
     receiptRow: {
       flexDirection: "row",
@@ -119,79 +173,92 @@ const createStyles = (themeColors) =>
       alignItems: "center",
     },
     receiptLabel: {
-      fontSize: 13,
+      fontSize: getResponsiveSize(13),
       color: themeColors.textSecondary,
       fontWeight: "600",
     },
     receiptValue: {
-      fontSize: 14,
+      fontSize: getResponsiveSize(14),
       color: themeColors.textPrimary,
       fontWeight: "800",
       textAlign: "right",
     },
     amountWrap: {
-      marginTop: 8,
-      paddingTop: 16,
-      borderTopWidth: 1,
-      borderTopColor: themeColors.border,
-      flexDirection: "row",
+      marginTop: getResponsiveSize(16),
+      paddingTop: getResponsiveSize(12),
+      paddingHorizontal: getResponsiveSize(12),
+      paddingVertical: getResponsiveSize(12),
+      borderTopWidth: 2,
+      borderTopColor: themeColors.primary,
+      flexDirection: screenWidth < 400 ? "column" : "row",
       justifyContent: "space-between",
-      alignItems: "center",
+      alignItems: screenWidth < 400 ? "flex-start" : "center",
+      backgroundColor: "#f0f9ff",
+      borderRadius: getResponsiveSize(8),
     },
     amountLabel: {
-      fontSize: 16,
+      fontSize: getResponsiveSize(16),
       fontWeight: "700",
       color: themeColors.textPrimary,
     },
     amountValue: {
-      fontSize: 22,
+      fontSize: getResponsiveSize(22),
       fontWeight: "900",
       color: themeColors.primary,
+      marginTop: screenWidth < 400 ? getResponsiveSize(8) : 0,
     },
     actionsWrap: {
-      marginTop: 24,
-      gap: 12,
-      paddingBottom: 40,
+      marginTop: getResponsiveSize(24),
+      gap: getResponsiveSize(12),
+      paddingBottom: getResponsiveSize(20),
     },
     primaryBtn: {
-      height: 56,
+      height: getResponsiveSize(56),
       backgroundColor: themeColors.primary,
-      borderRadius: 16,
+      borderRadius: getResponsiveSize(16),
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      gap: 10,
+      gap: getResponsiveSize(10),
     },
     secondaryBtn: {
-      height: 56,
+      height: getResponsiveSize(56),
       backgroundColor: themeColors.cardBackground,
-      borderRadius: 16,
+      borderRadius: getResponsiveSize(16),
       borderWidth: 1.5,
       borderColor: themeColors.border,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      gap: 10,
+      gap: getResponsiveSize(10),
     },
     btnText: {
-      fontSize: 16,
+      fontSize: getResponsiveSize(16),
       fontWeight: "800",
     },
     footerActions: {
-      flexDirection: "row",
-      gap: 12,
+      flexDirection: screenWidth < 400 ? "column" : "row",
+      gap: getResponsiveSize(12),
     },
     halfBtn: {
       flex: 1,
     },
   });
+};
 
 export default function PaymentSuccessScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const params = useLocalSearchParams();
   const themeColors = useColors();
   const user = useAuthStore((state) => state.user);
   const styles = createStyles(themeColors);
+
+  useLayoutEffect(() => {
+    navigation.getParent()?.setOptions({
+      tabBarStyle: { display: 'none' },
+    });
+  }, [navigation]);
 
   const amount = Number(params?.amount || 0);
   const transactionId = String(params?.transactionId || `TXN-${Date.now().toString().slice(-8)}`);
@@ -367,14 +434,14 @@ export default function PaymentSuccessScreen() {
           await FileSystem.StorageAccessFramework.createFileAsync(permissions.directoryUri, fileName, "application/pdf")
             .then(async (safUri) => {
               await FileSystem.writeAsStringAsync(safUri, base64, { encoding: FileSystem.EncodingType.Base64 });
-              Alert.alert("Sucess", "Receipt has been saved to your downloads.");
+              Alert.alert("Success", "Receipt has been saved to your downloads.");
             });
         }
       } else {
-        await Sharing.shareAsync(uri);
+        await Sharing.shareAsync(uri, { UTI: ".pdf", mimeType: "application/pdf" });
       }
     } catch (err) {
-      Alert.alert("Error", "Could not generate PDF receipt.");
+      Alert.alert("Error", "Could not download PDF receipt.");
     } finally {
       setIsProcessingPdf(false);
     }
@@ -393,20 +460,20 @@ export default function PaymentSuccessScreen() {
   };
 
   const handleDone = () => {
-    router.replace(returnTo === "/(tabs)/create" ? "/(tabs)/create" : "/(tabs)/index");
+    router.replace("/(tabs)/sessions");
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.headerGradient}>
         <View style={styles.successIconWrap}>
-          <Ionicons name="checkmark-sharp" size={42} color={themeColors.white} />
+          <Ionicons name="checkmark-sharp" size={getResponsiveSize(42)} color={themeColors.white} />
         </View>
         <Text style={styles.successTitle}>Payment Received!</Text>
         <Text style={styles.successSubtitle}>Session with {tutorName} is now confirmed</Text>
       </View>
 
-      <View style={styles.content}>
+      <View style={[styles.content, { flex: 0 }]}>
         <View style={styles.receiptCard}>
           <View style={styles.receiptLogoWrap}>
             <Text style={styles.receiptLogo}>{appName}.receipt</Text>
@@ -414,27 +481,69 @@ export default function PaymentSuccessScreen() {
           </View>
 
           <View style={styles.receiptBody}>
-            <View style={styles.receiptRow}>
-              <Text style={styles.receiptLabel}>Transaction Reference</Text>
-              <Text style={styles.receiptValue}>{transactionId}</Text>
-            </View>
-            <View style={styles.receiptRow}>
-              <Text style={styles.receiptLabel}>Customer</Text>
-              <Text style={styles.receiptValue}>{customerName}</Text>
-            </View>
-            <View style={styles.receiptRow}>
-              <Text style={styles.receiptLabel}>Subject</Text>
-              <Text style={styles.receiptValue}>{subject}</Text>
-            </View>
-            <View style={styles.receiptRow}>
-              <Text style={styles.receiptLabel}>Schedule</Text>
-              <Text style={styles.receiptValue}>{sessionTime} | {new Date(sessionDate).toLocaleDateString()}</Text>
-            </View>
-            <View style={styles.receiptRow}>
-              <Text style={styles.receiptLabel}>Payment Method</Text>
-              <Text style={styles.receiptValue}>{paymentMethod}</Text>
+            {/* Table Header */}
+            <View style={styles.tableHeader}>
+              <Text style={[styles.tableHeaderLabel, { flex: screenWidth < 400 ? 1 : 1.2 }]}>Details</Text>
+              <Text style={[styles.tableHeaderLabel, { flex: 1 }]}>Information</Text>
             </View>
 
+            {/* Table Rows */}
+            <View style={styles.tableRow}>
+              <View style={[styles.tableCell, { flex: screenWidth < 400 ? 1 : 1.2 }]}>
+                <Text style={styles.tableCellLabel}>Reference ID</Text>
+                <Text style={styles.tableCellValue}>{transactionId}</Text>
+              </View>
+              <View style={styles.tableCell}>
+                <Text style={styles.tableCellLabel}>Status</Text>
+                <Text style={[styles.tableCellValue, { color: "#059669" }]}>PAID</Text>
+              </View>
+            </View>
+
+            <View style={styles.tableRow}>
+              <View style={[styles.tableCell, { flex: screenWidth < 400 ? 1 : 1.2 }]}>
+                <Text style={styles.tableCellLabel}>Customer</Text>
+                <Text style={styles.tableCellValue}>{customerName}</Text>
+              </View>
+              <View style={styles.tableCell}>
+                <Text style={styles.tableCellLabel}>Email</Text>
+                <Text style={styles.tableCellValue}>{user?.email || "N/A"}</Text>
+              </View>
+            </View>
+
+            <View style={styles.tableRow}>
+              <View style={[styles.tableCell, { flex: screenWidth < 400 ? 1 : 1.2 }]}>
+                <Text style={styles.tableCellLabel}>Subject</Text>
+                <Text style={styles.tableCellValue}>{subject}</Text>
+              </View>
+              <View style={styles.tableCell}>
+                <Text style={styles.tableCellLabel}>Tutor</Text>
+                <Text style={styles.tableCellValue}>{tutorName}</Text>
+              </View>
+            </View>
+
+            <View style={styles.tableRow}>
+              <View style={[styles.tableCell, { flex: screenWidth < 400 ? 1 : 1.2 }]}>
+                <Text style={styles.tableCellLabel}>Session Date</Text>
+                <Text style={styles.tableCellValue}>{new Date(sessionDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</Text>
+              </View>
+              <View style={styles.tableCell}>
+                <Text style={styles.tableCellLabel}>Time</Text>
+                <Text style={styles.tableCellValue}>{sessionTime}</Text>
+              </View>
+            </View>
+
+            <View style={styles.tableRow}>
+              <View style={[styles.tableCell, { flex: screenWidth < 400 ? 1 : 1.2 }]}>
+                <Text style={styles.tableCellLabel}>Payment Method</Text>
+                <Text style={styles.tableCellValue}>{paymentMethod}</Text>
+              </View>
+              <View style={styles.tableCell}>
+                <Text style={styles.tableCellLabel}>Transaction Date</Text>
+                <Text style={styles.tableCellValue}>{new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })}</Text>
+              </View>
+            </View>
+
+            {/* Total Amount */}
             <View style={styles.amountWrap}>
               <Text style={styles.amountLabel}>Total Amount</Text>
               <Text style={styles.amountValue}>{amountLabel}</Text>
@@ -461,7 +570,7 @@ export default function PaymentSuccessScreen() {
                 <ActivityIndicator size="small" color={themeColors.primary} />
               ) : (
                 <>
-                  <Ionicons name="cloud-download-outline" size={20} color={themeColors.primary} />
+                  <Ionicons name="cloud-download-outline" size={getResponsiveSize(20)} color={themeColors.primary} />
                   <Text style={[styles.btnText, {color: themeColors.primary}]}>PDF</Text>
                 </>
               )}
@@ -472,12 +581,12 @@ export default function PaymentSuccessScreen() {
               onPress={handleShare}
               disabled={isProcessingPdf}
             >
-              <Ionicons name="share-outline" size={20} color={themeColors.primary} />
+              <Ionicons name="share-outline" size={getResponsiveSize(20)} color={themeColors.primary} />
               <Text style={[styles.btnText, {color: themeColors.primary}]}>Share</Text>
             </TouchableOpacity>
           </View>
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }

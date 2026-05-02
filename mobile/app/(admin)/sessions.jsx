@@ -174,6 +174,8 @@ export default function AdminSessionsPage() {
       paddingVertical: 6,
       borderRadius: 999,
       marginBottom: 12,
+      flexDirection: "row",
+      alignItems: "center",
     },
     badgeText: {
       fontSize: 12,
@@ -205,13 +207,16 @@ export default function AdminSessionsPage() {
 
   const renderItem = ({ item }) => {
     const paymentStatus = String(item?.payment?.status || "not_created").toLowerCase();
+    const sessionStatus = String(item?.status || "pending").toLowerCase();
+    const isPending = sessionStatus === "pending";
     const statusBg = paymentStatus === "disputed" ? "#fee2e2" : paymentStatus === "released" ? "#dcfce7" : paymentStatus === "refunded" ? "#dbeafe" : COLORS.inputBackground;
     const statusText = paymentStatus === "disputed" ? "#991b1b" : paymentStatus === "released" ? "#166534" : paymentStatus === "refunded" ? "#1d4ed8" : COLORS.textSecondary;
 
     return (
       <View style={styles.card}>
-        <View style={[styles.badge, { backgroundColor: statusBg }]}>
-          <Text style={[styles.badgeText, { color: statusText }]}>{statusLabel(item?.status)}</Text>
+        <View style={[styles.badge, { backgroundColor: isPending ? "#fef3c7" : statusBg, borderWidth: isPending ? 1 : 0, borderColor: isPending ? "#f59e0b" : "transparent" }]}>
+          {isPending && <Ionicons name="alert-circle" size={14} color="#f59e0b" style={{ marginRight: 6 }} />}
+          <Text style={[styles.badgeText, { color: isPending ? "#92400e" : statusText }]}>{statusLabel(item?.status)}</Text>
         </View>
 
         <View style={styles.row}>

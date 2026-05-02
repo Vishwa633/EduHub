@@ -451,6 +451,7 @@ export default function TutorNotificationsPage() {
                   <Text style={{ color: COLORS.textSecondary, marginTop: 2 }}>{item?.subject || "Session request"}</Text>
                 </View>
                 <View style={[styles.statusChip, { backgroundColor: chip.bg }]}>
+                  {isPending && <Ionicons name="alert-circle" size={14} color={chip.text} style={{ marginRight: 6 }} />}
                   <Text style={{ color: chip.text, fontWeight: "800", fontSize: 12 }}>{statusLabel(item?.status)}</Text>
                 </View>
               </View>
@@ -644,6 +645,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 999,
+    flexDirection: "row",
+    alignItems: "center",
   },
   metaRow: {
     flexDirection: "row",
