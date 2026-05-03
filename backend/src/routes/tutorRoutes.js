@@ -474,30 +474,19 @@ router.get('/search/by-subject', protectRoute, async (req, res) => {
     }
 });
 
-// Get unique tutor subjects for the home page filter chips
+// Get all active subjects from the Subject collection for the home page filter chips
 router.get('/subjects', protectRoute, async (req, res) => {
     try {
-        const subjects = await User.distinct('tutorProfile.subject', {
-            role: 'tutor',
-            approvalStatus: { $ne: 'pending' },
-            isActive: { $ne: false },
-            'tutorProfile.subject': { $type: 'string', $ne: '' },
-        });
+        const subjects = await Subject.find({ isActive: true })
+            .select('name image description')
+            .sort({ name: 1 })
+            .lean();
 
-        const normalizedSubjects = Array.from(
-            new Set(
-                subjects
-                    .map((subject) => String(subject || '').trim())
-                    .filter(Boolean),
-            ),
-        ).sort((left, right) => left.localeCompare(right));
+        console.log(`📚 Fetched ${subjects.length} active subjects from Subject collection`);
 
-        console.log("📚 Subjects from DB:", subjects);
-        console.log("📚 Normalized Subjects:", normalizedSubjects);
-
-        return res.status(200).json({ subjects: normalizedSubjects });
+        return res.status(200).json({ subjects });
     } catch (error) {
-        console.error('❌ Error fetching tutor subjects:', error);
+        console.error('❌ Error fetching subjects:', error);
         return res.status(500).json({ message: 'Internal Server error', error: error.message });
     }
 });

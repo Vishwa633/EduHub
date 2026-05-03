@@ -41,7 +41,12 @@ export default function Home() {
   const isTutor = user?.role === "tutor";
   const isStudent = user?.role === "student";
 
-  const normalizeSubject = (value) => String(value || "").trim();
+  const normalizeSubject = (value) => {
+    if (typeof value === 'object' && value !== null) {
+      return String(value.name || "").trim();
+    }
+    return String(value || "").trim();
+  };
 
   const loadDashboardData = useCallback(async () => {
     try {
@@ -85,7 +90,8 @@ export default function Home() {
   }, [token, isTutor]);
 
   const handleSubjectSelect = (subject) => {
-    const encodedName = encodeURIComponent(subject);
+    const name = typeof subject === 'object' ? subject.name : subject;
+    const encodedName = encodeURIComponent(name);
     router.push(`/(tabs)/subject/${encodedName}`);
   };
 
@@ -451,7 +457,11 @@ export default function Home() {
 
       <FlatList
         data={isTutor ? filteredSessions : filteredSubjects}
-        keyExtractor={(item, index) => isTutor ? (item._id || String(index)) : item}
+        keyExtractor={(item, index) => {
+          if (isTutor) return item._id || String(index);
+          if (typeof item === 'object' && item !== null) return item._id || item.name || String(index);
+          return String(item || index);
+        }}
         numColumns={1}
         contentContainerStyle={{ paddingTop: isTutor || isStudent ? 24 : 72, paddingBottom: 24, paddingHorizontal: 16 }}
         renderItem={({ item }) => {
@@ -539,15 +549,19 @@ export default function Home() {
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <View style={{ flex: 1, paddingRight: 8 }}>
                   <Text style={{ fontSize: 19, fontWeight: '900', color: titleColor }} numberOfLines={2}>
-                    {item}
+                    {typeof item === 'object' ? item.name : item}
                   </Text>
                   <Text style={{ fontSize: 12, marginTop: 6, color: bodyColor }}>
                     Tap to view tutors in this subject
                   </Text>
                 </View>
 
-                <View style={{ width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.inputBackground, borderWidth: 1, borderColor: COLORS.border }}>
-                  <Ionicons name="book-outline" size={18} color={COLORS.primary} />
+                <View style={{ width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.inputBackground, borderWidth: 1, borderColor: COLORS.border, overflow: 'hidden' }}>
+                  {typeof item === 'object' && item.image ? (
+                    <Image source={{ uri: item.image }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+                  ) : (
+                    <Ionicons name="book-outline" size={18} color={COLORS.primary} />
+                  )}
                 </View>
               </View>
 
