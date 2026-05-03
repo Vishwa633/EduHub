@@ -94,11 +94,20 @@ export default function TutorReviewsPage() {
       setLoading(true);
       setErrorMessage("");
       const response = await fetch(`${API_URL}/tutorreviews/review/${editReview.id}` , {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ comment: editComment }),
       });
-      const data = await response.json();
+      
+      const contentType = response.headers.get("content-type");
+      let data;
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        throw new Error("Server returned non-JSON response: " + text.substring(0, 50));
+      }
+
       if (!response.ok || data.error) {
         throw new Error(data.message || "Failed to update review");
       }
