@@ -2,7 +2,6 @@ import { useState, useLayoutEffect } from "react";
 import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View, Dimensions, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
-import { useLocalSearchParams, useRouter } from "expo-router";
 import { StorageAccessFramework, EncodingType, readAsStringAsync, writeAsStringAsync } from "expo-file-system";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
@@ -368,6 +367,8 @@ export default function PaymentSuccessScreen() {
     </html>
   `;
 
+  const sanitizeFileName = (name) => String(name || "receipt").replace(/[^a-z0-9]/gi, "_").toLowerCase();
+
   const handleDownload = async () => {
     try {
       setIsProcessingPdf(true);
@@ -382,7 +383,7 @@ export default function PaymentSuccessScreen() {
           await StorageAccessFramework.createFileAsync(permissions.directoryUri, fileName, "application/pdf")
             .then(async (safUri) => {
               await writeAsStringAsync(safUri, base64, { encoding: EncodingType.Base64 });
-              Alert.alert("Sucess", "Receipt has been saved to your downloads.");
+              Alert.alert("Success", "Receipt has been saved to your downloads.");
             });
         }
       } else {
@@ -542,6 +543,11 @@ export default function PaymentSuccessScreen() {
 
       {/* Action Buttons */}
       <View style={styles.actionsContainer}>
+        <TouchableOpacity style={styles.secondaryBtn} onPress={handleDownload} disabled={isProcessingPdf}>
+          <Ionicons name="download" size={getResponsiveSize(18)} color={COLORS.primary} />
+          <Text style={[styles.btnText, { color: COLORS.primary }]}>Download</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.secondaryBtn} onPress={handleShare} disabled={isProcessingPdf}>
           <Ionicons name="share-social" size={getResponsiveSize(18)} color={COLORS.primary} />
           <Text style={[styles.btnText, { color: COLORS.primary }]}>Share</Text>

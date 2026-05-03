@@ -207,7 +207,7 @@ export default function AdminPayments() {
             <Ionicons name="receipt-outline" size={48} color={COLORS.textSecondary} />
             <Text style={[styles.emptyText, { color: COLORS.textPrimary }]}>No payments found</Text>
             <Text style={[styles.emptySubtext, { color: COLORS.textSecondary }]}>
-              The system hasn't recorded any payments yet.
+              The system hasn&apos;t recorded any payments yet.
             </Text>
           </View>
         }
