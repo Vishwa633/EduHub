@@ -73,24 +73,24 @@ export default function TabLayout() {
                 }}
             />
 
+            {/* Materials and Help are available in the admin sidebar; removed from bottom tabs */}
+
             <Tabs.Screen
-                name="materials"
+                name="messages"
                 options={{
-                    title: 'Materials',
-                    href: isTutor ? null : undefined,
+                    title: 'Messages',
                     tabBarIcon: ({ color, size }) => (
-                        <Ionicons name='library-outline' size={size} color={color} />
+                        <Ionicons name='chatbubble-ellipses-outline' size={size} color={color} />
                     ),
                 }}
             />
 
             <Tabs.Screen
-                name="inquiries"
+                name="edubot"
                 options={{
-                    title: 'Help',
-                    href: isTutor ? null : undefined,
+                    title: 'EduBot',
                     tabBarIcon: ({ color, size }) => (
-                        <Ionicons name='help-circle-outline' size={size} color={color} />
+                        <Ionicons name='bulb-outline' size={size} color={color} />
                     ),
                 }}
             />
@@ -116,6 +116,8 @@ export default function TabLayout() {
             <Tabs.Screen name="payment-success" options={{ href: null }} />
             <Tabs.Screen name="favourites" options={{ href: null }} />
             <Tabs.Screen name="tutor/reviews" options={{ href: null }} />
+            <Tabs.Screen name="inquiries" options={{ href: null }} />
+            <Tabs.Screen name="materials" options={{ href: null }} />
 
         </Tabs>
   );

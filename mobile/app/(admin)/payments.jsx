@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { useCallback, useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuthStore } from "../../store/authStore";
 import { useColors } from "../../hooks/useColors";
 import { API_URL } from "../../constants/api";
@@ -20,6 +21,16 @@ export default function AdminPayments() {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [clearedIds, setClearedIds] = useState([]);
+
+  const loadClearedIds = async () => {
+    try {
+      const stored = await AsyncStorage.getItem("clearedPaymentIds");
+      if (stored) setClearedIds(JSON.parse(stored));
+    } catch (error) {
+      console.error("Error loading cleared IDs:", error);
+    }
+  };
 
   const fetchPayments = useCallback(async (isRefresh = false) => {
     try {
@@ -33,18 +44,32 @@ export default function AdminPayments() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Failed to fetch payments");
 
-      setPayments(Array.isArray(data) ? data : []);
+      const allPayments = Array.isArray(data) ? data : [];
+      const filtered = allPayments.filter(p => !clearedIds.includes(p.id));
+      setPayments(filtered);
     } catch (error) {
       console.error("❌ Error fetching payments:", error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [token]);
+  }, [token, clearedIds]);
+
+  useEffect(() => {
+    loadClearedIds();
+  }, []);
 
   useEffect(() => {
     fetchPayments();
   }, [fetchPayments]);
+
+  const handleClearAll = async () => {
+    const paymentIds = payments.map(p => p.id);
+    const newClearedIds = [...clearedIds, ...paymentIds];
+    setClearedIds(newClearedIds);
+    await AsyncStorage.setItem("clearedPaymentIds", JSON.stringify(newClearedIds));
+    setPayments([]);
+  };
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -143,11 +168,25 @@ export default function AdminPayments() {
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.background }}>
-      <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: COLORS.textPrimary }]}>System Payments</Text>
-        <Text style={[styles.headerSubtitle, { color: COLORS.textSecondary }]}>
-          All transactions across the platform
-        </Text>
+      <View style={[styles.header, {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}]}>
+        <View>
+          <Text style={[styles.headerTitle, { color: COLORS.textPrimary }]}>System Payments</Text>
+          <Text style={[styles.headerSubtitle, { color: COLORS.textSecondary }]}>All transactions across the platform</Text>
+        </View>
+        <TouchableOpacity
+          onPress={handleClearAll}
+          style={{
+            paddingVertical: 6,
+            paddingHorizontal: 10,
+            borderWidth: 2,
+            borderColor: COLORS.primary,
+            borderRadius: 8,
+            backgroundColor: COLORS.white
+          }}
+          accessibilityLabel="Clear all payments"
+        >
+          <Text style={{color: COLORS.primary, fontWeight: '700'}}>Clear All</Text>
+        </TouchableOpacity>
       </View>
 
       <FlatList
@@ -168,7 +207,7 @@ export default function AdminPayments() {
             <Ionicons name="receipt-outline" size={48} color={COLORS.textSecondary} />
             <Text style={[styles.emptyText, { color: COLORS.textPrimary }]}>No payments found</Text>
             <Text style={[styles.emptySubtext, { color: COLORS.textSecondary }]}>
-              The system hasn't recorded any payments yet.
+              The system hasn&apos;t recorded any payments yet.
             </Text>
           </View>
         }
