@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import mongoose from "mongoose";
 import dns from "node:dns";
 
@@ -77,8 +78,13 @@ const configureMongoDns = () => {
 export const connectDB = async () => {
     try {
         configureMongoDns();
-        
-        const conn = await mongoose.connect(process.env.MONGO_URI, {
+
+        const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
+        if (!mongoUri) {
+            throw new Error("MONGO_URI is not defined");
+        }
+
+        const conn = await mongoose.connect(mongoUri, {
             lookup: customLookup,
             serverSelectionTimeoutMS: 10000,
             family: 4, // Force IPv4 to avoid dual-stack resolution issues
@@ -90,4 +96,4 @@ export const connectDB = async () => {
         console.error("Error connecting to database:", error.message);
         throw error;
     }
-};
+};

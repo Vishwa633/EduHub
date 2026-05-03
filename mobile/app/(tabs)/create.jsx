@@ -139,6 +139,14 @@ export default function SessionsPage() {
       : sessions;
 
     return [...source].sort((a, b) => {
+      const statusA = normalizeStatus(a?.status);
+      const statusB = normalizeStatus(b?.status);
+      
+      // Pending sessions go to top
+      if (statusA === "pending" && statusB !== "pending") return -1;
+      if (statusB === "pending" && statusA !== "pending") return 1;
+      
+      // Otherwise sort by date (newest first)
       const dateA = new Date(a?.sessionDate || 0).getTime();
       const dateB = new Date(b?.sessionDate || 0).getTime();
       return dateB - dateA;
@@ -277,8 +285,11 @@ export default function SessionsPage() {
             paddingHorizontal: 10,
             paddingVertical: 5,
             marginBottom: 10,
+            flexDirection: "row",
+            alignItems: "center",
           }}
         >
+          {bookingStatus === "pending" && <Ionicons name="alert-circle" size={12} color={statusStyle.text} style={{ marginRight: 6 }} />}
           <Text style={{ color: statusStyle.text, fontWeight: "800", fontSize: 11 }}>
             {displayStatus}
           </Text>
