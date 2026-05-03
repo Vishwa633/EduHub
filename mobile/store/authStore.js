@@ -239,14 +239,35 @@ export const useAuthStore = create((set) => ({
     },
 
     logout: async () => {
+        console.log("🚪 Logging out...");
         try {
-            const { useChatStore } = require('./chatStore');
-            useChatStore.getState().disconnectSocket();
-        } catch (e) {
-            // chatStore may not be available
+            // 1. Disconnect Socket (handled safely to avoid circular dependency issues)
+            try {
+                const { useChatStore } = require('./chatStore');
+                const chatState = useChatStore?.getState();
+                if (chatState?.disconnectSocket) {
+                    chatState.disconnectSocket();
+                    console.log("✅ Socket disconnected");
+                }
+            } catch (socketError) {
+                console.warn("⚠️ Socket disconnection failed (likely safe to ignore):", socketError.message);
+            }
+
+            // 2. Clear Storage
+            await Promise.all([
+                AsyncStorage.removeItem("token"),
+                AsyncStorage.removeItem("user")
+            ]);
+            console.log("✅ Storage cleared");
+
+            // 3. Reset State (this triggers navigation redirection in _layout.jsx)
+            set({ token: null, user: null });
+            
+        } catch (error) {
+            console.error("❌ Logout failed:", error);
+            // Even if storage fails, we try to clear the state to allow the user to at least see the login screen
+            set({ token: null, user: null });
         }
-        await AsyncStorage.removeItem("token");
-        await AsyncStorage.removeItem("user");
-        set({ token: null, user: null });
     }
+
 }));
