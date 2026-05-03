@@ -34,6 +34,10 @@ const resolveApiHost = () => {
 	return "localhost";
 };
 
-export const API_URL =
-	(process.env.EXPO_PUBLIC_API_URL ||
-		`http://${resolveApiHost()}:${DEFAULT_API_PORT}/api`).replace(/\/$/, "");
+const rawApiUrl = process.env.EXPO_PUBLIC_API_URL || `http://${resolveApiHost()}:${DEFAULT_API_PORT}/api`;
+const sanitizedApiUrl = rawApiUrl.replace(/\/$/, "");
+
+export const API_URL = sanitizedApiUrl.endsWith("/api")
+	? sanitizedApiUrl
+	: `${sanitizedApiUrl}/api`;
+
