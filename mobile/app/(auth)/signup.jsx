@@ -843,7 +843,7 @@ export default function Signup() {
             label="Username"
             icon="person-outline"
             colors={colors}
-            placeholder="johndoe"
+            placeholder="alex_smith"
             value={username}
             onChangeText={(text) => setUsername(toSafeText(text))}
             autoCapitalize="none"
@@ -853,7 +853,7 @@ export default function Signup() {
             label="Email"
             icon="mail-outline"
             colors={colors}
-            placeholder="johndoe@gmail.com"
+            placeholder="alex@example.com"
             value={email}
             onChangeText={(text) => setEmail(toSafeText(text))}
             keyboardType="email-address"
@@ -892,7 +892,7 @@ export default function Signup() {
 
               <TextInput
                 style={{ flex: 1, height: 48, fontSize: 16, color: colors.textDark }}
-                placeholder="******"
+                placeholder="••••••••"
                 placeholderTextColor={colors.placeholderText}
                 value={password}
                 onChangeText={(text) => setPassword(toSafeText(text))}
@@ -940,7 +940,7 @@ export default function Signup() {
                     label="Full Name"
                     icon="person-circle-outline"
                     colors={colors}
-                    placeholder="John Doe"
+                    placeholder="Kusalya Methpani"
                     value={fullName}
                     onChangeText={(text) => setFullName(toSafeText(text))}
                   />
@@ -978,7 +978,7 @@ export default function Signup() {
                     label="Mobile Number"
                     icon="call-outline"
                     colors={colors}
-                    placeholder="+94712345678"
+                    placeholder="071 234 5678"
                     value={mobileNumber}
                     onChangeText={(text) => setMobileNumber(toSafeText(text))}
                     keyboardType="phone-pad"
@@ -1019,7 +1019,7 @@ export default function Signup() {
                       label="Price"
                       icon="cash-outline"
                       colors={colors}
-                      placeholder="e.g., 1500"
+                      placeholder="1500"
                       value={price}
                       onChangeText={(text) => setPrice(toSafeText(text).replace(/[^0-9.]/g, ""))}
                       keyboardType="decimal-pad"
@@ -1262,7 +1262,7 @@ export default function Signup() {
                         color: colors.textDark,
                         fontSize: 14,
                       }}
-                      placeholder="Tell students about yourself, your experience, teaching style..."
+                      placeholder="Passionate about teaching with 5 years of experience..."
                       placeholderTextColor={colors.placeholderText}
                       value={bio}
                       onChangeText={(text) => setBio(toSafeText(text))}
@@ -1415,7 +1415,7 @@ export default function Signup() {
                           label="NIC Number"
                           icon="card-outline"
                           colors={colors}
-                          placeholder="e.g., 200012345678 or 901234567V"
+                          placeholder="200012345678"
                           value={nicNumber}
                           onChangeText={(text) => setNicNumber(toSafeText(text).trim())}
                           autoCapitalize="characters"

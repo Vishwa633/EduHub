@@ -85,7 +85,7 @@ export default function Login() {
                     />   
                     <TextInput
                         style={{ flex: 1, height: 48, fontSize: 16, color: COLORS.textDark }}
-                        placeholder="Enter your email"
+                        placeholder="email@address.com"
                         placeholderTextColor={COLORS.placeholderText}
                         value={email}
                         onChangeText={setEmail}
@@ -107,7 +107,7 @@ export default function Login() {
                     />   
                     <TextInput
                         style={{ flex: 1, height: 48, fontSize: 16, color: COLORS.textDark }}
-                        placeholder="Enter your password"
+                        placeholder="••••••••"
                         placeholderTextColor={COLORS.placeholderText}
                         value={password}
                         onChangeText={setPassword}
