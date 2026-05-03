@@ -16,6 +16,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "expo-router";
+import { Image } from "expo-image";
 
 import { API_URL } from "../../constants/api";
 import { Ionicons } from "@expo/vector-icons";
