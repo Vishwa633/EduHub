@@ -7,6 +7,7 @@ import MaterialPurchase from "../models/MaterialPurchase.js";
 import Payment from "../models/Payment.js";
 
 const router = express.Router();
+const MATERIAL_TYPES = ["tute", "book", "quiz"];
 
 // Multer config for memory storage
 const storage = multer.memoryStorage();
@@ -166,7 +167,7 @@ router.patch("/:id", protectRoute, async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const { title, description, price, isActive } = req.body;
+    const { title, description, price, type, isActive } = req.body;
     const material = await Material.findOne({ _id: req.params.id, tutor: req.user._id });
 
     if (!material) {
@@ -176,6 +177,12 @@ router.patch("/:id", protectRoute, async (req, res) => {
     if (title) material.title = title;
     if (description !== undefined) material.description = description;
     if (price !== undefined) material.price = Number(price);
+    if (type !== undefined) {
+      if (!MATERIAL_TYPES.includes(type)) {
+        return res.status(400).json({ message: "Invalid material type" });
+      }
+      material.type = type;
+    }
     if (isActive !== undefined) material.isActive = isActive;
 
     await material.save();
