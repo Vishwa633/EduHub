@@ -425,15 +425,18 @@ export default function AdminHome() {
   const openEduBot = () => router.push("/edubot");
 
   const onLogout = async () => {
+    const performLogout = async () => {
+      try {
+        await logout();
+      } catch (error) {
+        console.error("Logout error in AdminHome:", error);
+        Alert.alert("Error", "An unexpected error occurred during logout.");
+      }
+    };
+
     if (Platform.OS === 'web') {
-      const confirmed = window.confirm("Are you sure you want to logout?");
-      if (confirmed) {
-        try {
-          await logout();
-          router.replace("/(auth)");
-        } catch (_error) {
-          alert("Unable to logout");
-        }
+      if (window.confirm("Are you sure you want to logout?")) {
+        performLogout();
       }
       return;
     }
@@ -443,17 +446,11 @@ export default function AdminHome() {
       { 
         text: "Logout", 
         style: "destructive",
-        onPress: async () => {
-          try {
-            await logout();
-            router.replace("/(auth)");
-          } catch (_error) {
-            Alert.alert("Error", "Unable to logout");
-          }
-        }
+        onPress: performLogout
       },
     ]);
   };
+
 
   const primaryStats = [
     { label: "Total Tutors", value: stats.tutors, icon: "school-outline" },
