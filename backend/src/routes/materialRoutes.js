@@ -8,6 +8,12 @@ import Payment from "../models/Payment.js";
 
 const router = express.Router();
 const MATERIAL_TYPES = ["tute", "book", "quiz"];
+const INVALID_PRICE_MESSAGE = "Price must be a valid non-negative number";
+
+const parseMaterialPrice = (price) => {
+  const numericPrice = Number(price);
+  return Number.isFinite(numericPrice) && numericPrice >= 0 ? numericPrice : null;
+};
 
 // Multer config for memory storage
 const storage = multer.memoryStorage();
@@ -31,10 +37,16 @@ router.post("/upload", protectRoute, upload.single("file"), async (req, res) => 
     }
 
     const { title, description, subject, type, price } = req.body;
+    const normalizedTitle = typeof title === "string" ? title.trim() : "";
+    const normalizedSubject = typeof subject === "string" ? subject.trim() : "";
+
+    if (!normalizedTitle || !normalizedSubject || price === undefined || price === null || price === "") {
+      return res.status(400).json({ message: "Title, subject, and price are required" });
+    }
     
     // Enforce subject restriction
     const tutorSubject = req.user.tutorProfile?.subject;
-    if (!tutorSubject || String(subject).toLowerCase() !== String(tutorSubject).toLowerCase()) {
+    if (!tutorSubject || normalizedSubject.toLowerCase() !== String(tutorSubject).toLowerCase()) {
       return res.status(400).json({ 
         message: `You can only upload materials for your registered subject: ${tutorSubject || 'None'}` 
       });
@@ -44,8 +56,9 @@ router.post("/upload", protectRoute, upload.single("file"), async (req, res) => 
       return res.status(400).json({ message: "PDF file is required" });
     }
 
-    if (!title || !subject || !price) {
-      return res.status(400).json({ message: "Title, subject, and price are required" });
+    const numericPrice = parseMaterialPrice(price);
+    if (numericPrice === null) {
+      return res.status(400).json({ message: INVALID_PRICE_MESSAGE });
     }
 
     // Upload to Cloudinary
@@ -64,11 +77,11 @@ router.post("/upload", protectRoute, upload.single("file"), async (req, res) => 
         try {
           const material = await Material.create({
             tutor: req.user._id,
-            title,
+            title: normalizedTitle,
             description,
-            subject,
+            subject: normalizedSubject,
             type: type || "tute",
-            price: Number(price),
+            price: numericPrice,
             fileUrl: result.secure_url,
             cloudinaryPublicId: result.public_id,
           });
@@ -176,7 +189,13 @@ router.patch("/:id", protectRoute, async (req, res) => {
 
     if (title) material.title = title;
     if (description !== undefined) material.description = description;
-    if (price !== undefined) material.price = Number(price);
+    if (price !== undefined) {
+      const numericPrice = parseMaterialPrice(price);
+      if (numericPrice === null) {
+        return res.status(400).json({ message: INVALID_PRICE_MESSAGE });
+      }
+      material.price = numericPrice;
+    }
     if (type !== undefined) {
       if (!MATERIAL_TYPES.includes(type)) {
         return res.status(400).json({ message: "Invalid material type" });

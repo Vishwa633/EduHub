@@ -1,7 +1,6 @@
 import {
   View,
   Text,
-  FlatList,
   RefreshControl,
   TouchableOpacity,
   StyleSheet,
@@ -12,7 +11,6 @@ import {
   ScrollView,
 } from "react-native";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "expo-router";
 import { useAuthStore } from "../../store/authStore";
 import { useColors } from "../../hooks/useColors";
 import { API_URL } from "../../constants/api";
@@ -27,7 +25,6 @@ const TYPES = [
 ];
 
 export default function StudentMaterials() {
-  const router = useRouter();
   const { token } = useAuthStore();
   const COLORS = useColors();
   
@@ -44,8 +41,8 @@ export default function StudentMaterials() {
       else setLoading(true);
 
       let url = `${API_URL}/materials?`;
-      if (selectedSubject) url += `subject=${selectedSubject}&`;
-      if (selectedType) url += `type=${selectedType}&`;
+      if (selectedSubject) url += `subject=${encodeURIComponent(selectedSubject)}&`;
+      if (selectedType) url += `type=${encodeURIComponent(selectedType)}&`;
 
       const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -156,6 +153,61 @@ export default function StudentMaterials() {
         />
       </View>
 
+      <ScrollView
+        horizontal
+        style={styles.filterScroll}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.typeList}
+      >
+        {TYPES.map((item) => {
+          const isSelected = selectedType === item.id;
+          return (
+            <TouchableOpacity
+              key={item.id}
+              style={[
+                styles.typeChip,
+                isSelected && { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+              ]}
+              onPress={() => setSelectedType(isSelected ? null : item.id)}
+            >
+              <Ionicons
+                name={item.icon}
+                size={16}
+                color={isSelected ? COLORS.white : COLORS.textSecondary}
+              />
+              <Text style={[styles.typeLabel, isSelected && { color: COLORS.white }]} numberOfLines={1}>
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
+      <ScrollView
+        horizontal
+        style={styles.filterScroll}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.subjectList}
+      >
+        {SUBJECTS.map((item) => {
+          const isSelected = selectedSubject === item;
+          return (
+            <TouchableOpacity
+              key={item}
+              style={[
+                styles.subjectChip,
+                isSelected && { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+              ]}
+              onPress={() => setSelectedSubject(isSelected ? null : item)}
+            >
+              <Text style={[styles.subjectLabel, isSelected && { color: COLORS.white }]} numberOfLines={1}>
+                {item}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
       <ScrollView 
         contentContainerStyle={styles.listContent}
         refreshControl={
@@ -233,16 +285,24 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
   },
+  filterScroll: {
+    flexGrow: 0,
+    flexShrink: 0,
+  },
   typeList: {
     paddingLeft: 20,
-    paddingBottom: 10,
+    paddingRight: 20,
+    paddingTop: 2,
+    paddingBottom: 12,
+    alignItems: 'center',
   },
   typeChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 10,
+    minHeight: 42,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#e2e8f0',
@@ -251,16 +311,21 @@ const styles = StyleSheet.create({
   },
   typeLabel: {
     fontSize: 13,
+    lineHeight: 18,
     fontWeight: '700',
     color: '#64748b',
   },
   subjectList: {
     paddingLeft: 20,
+    paddingRight: 20,
+    paddingTop: 2,
     paddingBottom: 20,
+    alignItems: 'center',
   },
   subjectChip: {
     paddingHorizontal: 16,
-    paddingVertical: 6,
+    paddingVertical: 9,
+    minHeight: 38,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#e2e8f0',
@@ -269,6 +334,7 @@ const styles = StyleSheet.create({
   },
   subjectLabel: {
     fontSize: 12,
+    lineHeight: 16,
     fontWeight: '600',
     color: '#64748b',
   },

@@ -9,6 +9,7 @@ import {
   Modal,
   Alert,
   ScrollView,
+  Linking,
 } from "react-native";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "expo-router";
@@ -36,6 +37,8 @@ export default function TutorMaterials() {
   const [refreshing, setRefreshing] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [editingMaterial, setEditingMaterial] = useState(null);
+  const [selectedMaterial, setSelectedMaterial] = useState(null);
+  const [isDetailsModalVisible, setDetailsModalVisible] = useState(false);
 
   // New Material Form State
   const [title, setTitle] = useState("");
@@ -158,6 +161,27 @@ export default function TutorMaterials() {
     );
   };
 
+  const handleViewDetails = (material) => {
+    setSelectedMaterial(material);
+    setDetailsModalVisible(true);
+  };
+
+  const handleCloseDetails = () => {
+    setDetailsModalVisible(false);
+    setSelectedMaterial(null);
+  };
+
+  const handleOpenPDF = () => {
+    if (!selectedMaterial?.fileUrl) {
+      Alert.alert("Error", "PDF file not available");
+      return;
+    }
+
+    Linking.openURL(selectedMaterial.fileUrl).catch(() =>
+      Alert.alert("Error", "Could not open PDF")
+    );
+  };
+
   const handleEdit = (material) => {
     setEditingMaterial(material);
     setTitle(material.title);
@@ -226,6 +250,9 @@ export default function TutorMaterials() {
           {new Date(item.createdAt).toLocaleDateString()}
         </Text>
         <View style={styles.actionRow}>
+          <TouchableOpacity onPress={() => handleViewDetails(item)} style={styles.iconBtn}>
+             <Ionicons name="eye-outline" size={18} color={COLORS.primary} />
+          </TouchableOpacity>
           <TouchableOpacity onPress={() => handleEdit(item)} style={styles.iconBtn}>
              <Ionicons name="create-outline" size={18} color={COLORS.primary} />
           </TouchableOpacity>
@@ -412,6 +439,93 @@ export default function TutorMaterials() {
           </View>
         </View>
       </Modal>
+
+      <Modal visible={isDetailsModalVisible} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: COLORS.white }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: COLORS.textPrimary }]}>
+                Material Details
+              </Text>
+              <TouchableOpacity onPress={handleCloseDetails}>
+                <Ionicons name="close" size={24} color={COLORS.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={styles.detailsHeader}>
+                <View style={[styles.detailsIcon, { backgroundColor: COLORS.primary + '15' }]}>
+                  <Ionicons name="document-text-outline" size={24} color={COLORS.primary} />
+                </View>
+                <View style={styles.detailsTitleWrap}>
+                  <Text style={[styles.detailsTitle, { color: COLORS.textPrimary }]}>
+                    {selectedMaterial?.title || "Untitled material"}
+                  </Text>
+                  <Text style={[styles.detailsMeta, { color: COLORS.textSecondary }]}>
+                    {selectedMaterial?.subject || "No subject"} • {(selectedMaterial?.type || "tute").toUpperCase()}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={[styles.detailsSection, { borderColor: COLORS.border }]}>
+                <Text style={[styles.label, { color: COLORS.textSecondary }]}>Description</Text>
+                <Text style={[styles.detailsText, { color: COLORS.textPrimary }]}>
+                  {selectedMaterial?.description || "No description"}
+                </Text>
+              </View>
+
+              <View style={styles.detailsGrid}>
+                <View style={[styles.detailsField, { borderColor: COLORS.border }]}>
+                  <Text style={[styles.label, { color: COLORS.textSecondary }]}>Subject</Text>
+                  <Text style={[styles.detailsValue, { color: COLORS.textPrimary }]}>
+                    {selectedMaterial?.subject || "N/A"}
+                  </Text>
+                </View>
+                <View style={[styles.detailsField, { borderColor: COLORS.border }]}>
+                  <Text style={[styles.label, { color: COLORS.textSecondary }]}>Type</Text>
+                  <Text style={[styles.detailsValue, { color: COLORS.textPrimary }]}>
+                    {TYPES.find((t) => t.id === selectedMaterial?.type)?.label || selectedMaterial?.type || "N/A"}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.detailsGrid}>
+                <View style={[styles.detailsField, { borderColor: COLORS.border }]}>
+                  <Text style={[styles.label, { color: COLORS.textSecondary }]}>Price</Text>
+                  <Text style={[styles.detailsValue, { color: COLORS.primary }]}>
+                    LKR {selectedMaterial?.price ?? 0}
+                  </Text>
+                </View>
+                <View style={[styles.detailsField, { borderColor: COLORS.border }]}>
+                  <Text style={[styles.label, { color: COLORS.textSecondary }]}>Uploaded</Text>
+                  <Text style={[styles.detailsValue, { color: COLORS.textPrimary }]}>
+                    {selectedMaterial?.createdAt ? new Date(selectedMaterial.createdAt).toLocaleDateString() : "N/A"}
+                  </Text>
+                </View>
+              </View>
+
+              {selectedMaterial?.isActive !== undefined && (
+                <View style={[styles.detailsField, { borderColor: COLORS.border, marginBottom: 16 }]}>
+                  <Text style={[styles.label, { color: COLORS.textSecondary }]}>Status</Text>
+                  <Text style={[styles.detailsValue, { color: selectedMaterial.isActive ? COLORS.primary : "#dc2626" }]}>
+                    {selectedMaterial.isActive ? "Active" : "Inactive"}
+                  </Text>
+                </View>
+              )}
+
+              <TouchableOpacity
+                style={[styles.submitButton, { backgroundColor: COLORS.primary }]}
+                onPress={handleOpenPDF}
+              >
+                <View style={styles.detailsButtonContent}>
+                  <Ionicons name="eye-outline" size={18} color={COLORS.white} />
+                  <Text style={styles.submitButtonText}>Open PDF</Text>
+                </View>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -590,6 +704,62 @@ const styles = StyleSheet.create({
   readOnlyMetaText: {
     fontSize: 14,
     fontWeight: '800',
+  },
+  detailsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+  },
+  detailsIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  detailsTitleWrap: {
+    flex: 1,
+  },
+  detailsTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  detailsMeta: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 4,
+  },
+  detailsSection: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+  },
+  detailsText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  detailsGrid: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 16,
+  },
+  detailsField: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+  },
+  detailsValue: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  detailsButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
   fileButton: {
     flexDirection: 'row',
