@@ -543,10 +543,7 @@ export default function PaymentSuccessScreen() {
 
       {/* Action Buttons */}
       <View style={styles.actionsContainer}>
-        <TouchableOpacity style={styles.secondaryBtn} onPress={handleDownload} disabled={isProcessingPdf}>
-          <Ionicons name="download" size={getResponsiveSize(18)} color={COLORS.primary} />
-          <Text style={[styles.btnText, { color: COLORS.primary }]}>Download</Text>
-        </TouchableOpacity>
+
 
         <TouchableOpacity style={styles.secondaryBtn} onPress={handleShare} disabled={isProcessingPdf}>
           <Ionicons name="share-social" size={getResponsiveSize(18)} color={COLORS.primary} />
