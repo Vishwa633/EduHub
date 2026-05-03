@@ -2,8 +2,9 @@
   "expo": {
     "extra": {
       "eas": {
-        "projectId": "94500efd-2036-446b-9a9f-8c86bf151611"
+        "projectId": "d1df5681-2df9-45b0-b1e7-15a166ed505a"
       }
-    }
+    },
+    "owner": "vishwa633"
   }
 }
