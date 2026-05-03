@@ -318,11 +318,11 @@ export default function Home() {
               <Text style={{ color: COLORS.textPrimary, fontWeight: "900", fontSize: 16 }}>Favourites</Text>
             </TouchableOpacity>
 
-            {!isTutor && (
+            {(isTutor || isStudent) && (
               <TouchableOpacity
                 onPress={() => {
                   closeSideMenu();
-                  router.push("/(tabs)/materials");
+                  router.push(isTutor ? "/tutor/materials" : "/(tabs)/materials");
                 }}
                 style={{
                   borderRadius: 12,

@@ -181,7 +181,6 @@ export default function TutorMaterials() {
           title,
           description,
           price: Number(price),
-          subject,
           type,
         }),
       });
@@ -315,35 +314,63 @@ export default function TutorMaterials() {
                 />
               </View>
 
-              <View style={styles.formGroup}>
-                <Text style={[styles.label, { color: COLORS.textSecondary }]}>Subject</Text>
-                <View style={styles.pickerContainer}>
-                  {SUBJECTS.map((s) => (
-                    <TouchableOpacity 
-                      key={s} 
-                      style={[styles.pickerItem, subject === s && { backgroundColor: COLORS.primary }]}
-                      onPress={() => setSubject(s)}
-                    >
-                      <Text style={[styles.pickerText, subject === s && { color: COLORS.white }]}>{s}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
+              {editingMaterial ? (
+                <>
+                  <View style={[styles.readOnlyMetaItem, { borderColor: COLORS.border }]}>
+                    <Text style={[styles.label, { color: COLORS.textSecondary }]}>Subject</Text>
+                    <Text style={[styles.readOnlyMetaText, { color: COLORS.textPrimary }]}>
+                      {subject}
+                    </Text>
+                  </View>
 
-              <View style={styles.formGroup}>
-                <Text style={[styles.label, { color: COLORS.textSecondary }]}>Type</Text>
-                <View style={styles.typeContainer}>
-                  {TYPES.map((t) => (
-                    <TouchableOpacity 
-                      key={t.id} 
-                      style={[styles.typeItem, type === t.id && { backgroundColor: COLORS.primary, borderColor: COLORS.primary }]}
-                      onPress={() => setType(t.id)}
-                    >
-                      <Text style={[styles.typeText, type === t.id && { color: COLORS.white }]}>{t.label}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
+                  <View style={styles.formGroup}>
+                    <Text style={[styles.label, { color: COLORS.textSecondary }]}>Type</Text>
+                    <View style={styles.typeContainer}>
+                      {TYPES.map((t) => (
+                        <TouchableOpacity 
+                          key={t.id} 
+                          style={[styles.typeItem, type === t.id && { backgroundColor: COLORS.primary, borderColor: COLORS.primary }]}
+                          onPress={() => setType(t.id)}
+                        >
+                          <Text style={[styles.typeText, type === t.id && { color: COLORS.white }]}>{t.label}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                </>
+              ) : (
+                <>
+                  <View style={styles.formGroup}>
+                    <Text style={[styles.label, { color: COLORS.textSecondary }]}>Subject</Text>
+                    <View style={styles.pickerContainer}>
+                      {SUBJECTS.map((s) => (
+                        <TouchableOpacity 
+                          key={s} 
+                          style={[styles.pickerItem, subject === s && { backgroundColor: COLORS.primary }]}
+                          onPress={() => setSubject(s)}
+                        >
+                          <Text style={[styles.pickerText, subject === s && { color: COLORS.white }]}>{s}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+
+                  <View style={styles.formGroup}>
+                    <Text style={[styles.label, { color: COLORS.textSecondary }]}>Type</Text>
+                    <View style={styles.typeContainer}>
+                      {TYPES.map((t) => (
+                        <TouchableOpacity 
+                          key={t.id} 
+                          style={[styles.typeItem, type === t.id && { backgroundColor: COLORS.primary, borderColor: COLORS.primary }]}
+                          onPress={() => setType(t.id)}
+                        >
+                          <Text style={[styles.typeText, type === t.id && { color: COLORS.white }]}>{t.label}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                </>
+              )}
 
               <View style={styles.formGroup}>
                 <Text style={[styles.label, { color: COLORS.textSecondary }]}>Price (LKR)</Text>
@@ -553,6 +580,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: '#64748b',
+  },
+  readOnlyMetaItem: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+  },
+  readOnlyMetaText: {
+    fontSize: 14,
+    fontWeight: '800',
   },
   fileButton: {
     flexDirection: 'row',
