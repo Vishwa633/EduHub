@@ -28,6 +28,7 @@ export default function Home() {
   const COLORS = useColors();
   const router = useRouter();
   const [subjects, setSubjects] = useState([]);
+  const [tutorSessions, setTutorSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -42,34 +43,46 @@ export default function Home() {
 
   const normalizeSubject = (value) => String(value || "").trim();
 
-  const loadSubjects = useCallback(async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
 
       if (!token) {
         setSubjects([]);
+        setTutorSessions([]);
         setLoading(false);
         return;
       }
 
-      const response = await fetch(`${API_URL}/tutors/subjects`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      if (isTutor) {
+        const response = await fetch(`${API_URL}/bookings/tutor`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Failed to fetch subjects");
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Failed to fetch tutor sessions");
 
-      const safeSubjects = Array.isArray(data?.subjects) ? data.subjects : [];
-      setSubjects(safeSubjects);
+        const safeSessions = Array.isArray(data) ? data : [];
+        setTutorSessions(safeSessions);
+      } else {
+        const response = await fetch(`${API_URL}/tutors/subjects`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Failed to fetch subjects");
+
+        const safeSubjects = Array.isArray(data?.subjects) ? data.subjects : [];
+        setSubjects(safeSubjects);
+      }
     } catch (error) {
-      console.error("❌ Error fetching subjects:", error);
-      setSubjects([]);
+      console.error("❌ Error fetching dashboard data:", error);
+      if (isTutor) setTutorSessions([]);
+      else setSubjects([]);
     } finally {
       setLoading(false);
     }
-  }, [token]);
-
-
+  }, [token, isTutor]);
 
   const handleSubjectSelect = (subject) => {
     const encodedName = encodeURIComponent(subject);
@@ -80,10 +93,14 @@ export default function Home() {
   const filteredSubjects = normalizedQuery
     ? subjects.filter((subject) => normalizeSubject(subject).toLowerCase().includes(normalizedQuery))
     : subjects;
+    
+  const filteredSessions = normalizedQuery
+    ? tutorSessions.filter((session) => (session?.studentName || session?.student?.username || "").toLowerCase().includes(normalizedQuery))
+    : tutorSessions;
 
   useEffect(() => {
-    loadSubjects();
-  }, [loadSubjects]);
+    loadDashboardData();
+  }, [loadDashboardData]);
 
   const loadUnreadAlerts = useCallback(async () => {
     try {
@@ -433,14 +450,70 @@ export default function Home() {
       </Modal>
 
       <FlatList
-        data={filteredSubjects}
-        keyExtractor={(item) => item}
+        data={isTutor ? filteredSessions : filteredSubjects}
+        keyExtractor={(item, index) => isTutor ? (item._id || String(index)) : item}
         numColumns={1}
         contentContainerStyle={{ paddingTop: isTutor || isStudent ? 24 : 72, paddingBottom: 24, paddingHorizontal: 16 }}
         renderItem={({ item }) => {
           const titleColor = COLORS.primary;
           const bodyColor = COLORS.textSecondary;
           const metaColor = COLORS.textSecondary;
+
+          if (isTutor) {
+            return (
+              <TouchableOpacity
+                onPress={() => router.push(`/(tabs)/messages`)}
+                style={{
+                  minHeight: 126,
+                  borderRadius: 20,
+                  padding: 14,
+                  marginBottom: 12,
+                  marginHorizontal: 8,
+                  alignSelf: 'stretch',
+                  backgroundColor: COLORS.white,
+                  borderWidth: 1,
+                  borderColor: COLORS.border,
+                  boxShadow: '0px 8px 14px rgba(0, 0, 0, 0.08)',
+                  elevation: 3,
+                  justifyContent: 'space-between',
+                  overflow: 'hidden',
+                }}
+              >
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <View style={{ flex: 1, paddingRight: 8 }}>
+                    <Text style={{ fontSize: 19, fontWeight: '900', color: titleColor }} numberOfLines={2}>
+                      {item.studentName || item.student?.username || "Student"}
+                    </Text>
+                    <Text style={{ fontSize: 12, marginTop: 6, color: bodyColor }}>
+                      Subject: {item.subject}
+                    </Text>
+                    <Text style={{ fontSize: 12, marginTop: 2, color: bodyColor }}>
+                      Date: {new Date(item.sessionDate).toLocaleDateString()}
+                    </Text>
+                  </View>
+
+                  <View style={{ width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.inputBackground, borderWidth: 1, borderColor: COLORS.border }}>
+                    <Ionicons name="person-outline" size={18} color={COLORS.primary} />
+                  </View>
+                </View>
+
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
+                  <View style={{ alignSelf: 'flex-start', paddingVertical: 7, paddingHorizontal: 11, borderRadius: 999, backgroundColor: COLORS.inputBackground, borderWidth: 1, borderColor: COLORS.border }}>
+                    <Text style={{ fontSize: 11, fontWeight: '800', color: COLORS.primary }}>
+                      {item.status.toUpperCase()}
+                    </Text>
+                  </View>
+
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="chatbubbles-outline" size={14} color={metaColor} />
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: metaColor }}>
+                      Message
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            );
+          }
 
           return (
             <TouchableOpacity
@@ -499,17 +572,17 @@ export default function Home() {
           <View style={{ paddingHorizontal: 8, paddingTop: 16, paddingBottom: 16 }}>
             <View style={{ borderRadius: 28, padding: 18, marginBottom: 16, backgroundColor: COLORS.white, borderWidth: 1, borderColor: '#e6edf5', boxShadow: '0px 8px 14px rgba(0, 0, 0, 0.08)', elevation: 3 }}>
               <Text style={{ fontSize: 36, fontWeight: '900', color: COLORS.textPrimary, letterSpacing: 0.2, lineHeight: 40 }}>
-                Subjects
+                {isTutor ? "Students" : "Subjects"}
               </Text>
               <Text style={{ fontSize: 14, color: COLORS.textSecondary, marginTop: 4, lineHeight: 20 }}>
-                Pick a subject and jump straight into the tutors who teach it.
+                {isTutor ? "Here are the students that booked sessions with you." : "Pick a subject and jump straight into the tutors who teach it."}
               </Text>
 
               <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.inputBackground, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 12, borderWidth: 1, borderColor: COLORS.border }}>
-                  <Ionicons name="grid-outline" size={14} color={COLORS.primary} />
+                  <Ionicons name={isTutor ? "people-outline" : "grid-outline"} size={14} color={COLORS.primary} />
                   <Text style={{ color: COLORS.textPrimary, fontSize: 12, fontWeight: '700', marginLeft: 6 }}>
-                    {filteredSubjects.length} subjects
+                    {isTutor ? `${filteredSessions.length} sessions` : `${filteredSubjects.length} subjects`}
                   </Text>
                 </View>
               </View>
@@ -532,7 +605,7 @@ export default function Home() {
               <TextInput
                 value={subjectQuery}
                 onChangeText={setSubjectQuery}
-                placeholder="Search subjects..."
+                placeholder={isTutor ? "Search students..." : "Search subjects..."}
                 placeholderTextColor={COLORS.textSecondary}
                 underlineColorAndroid="transparent"
                 autoCorrect={false}
@@ -576,17 +649,17 @@ export default function Home() {
           <View style={{ paddingHorizontal: 24, paddingTop: 30, alignItems: "center" }}>
             <Ionicons name="search-outline" size={26} color={COLORS.textSecondary} />
             <Text style={{ marginTop: 10, color: COLORS.textPrimary, fontWeight: "800", fontSize: 16 }}>
-              No subjects found
+              {isTutor ? "No students found" : "No subjects found"}
             </Text>
             <Text style={{ marginTop: 4, color: COLORS.textSecondary, textAlign: "center" }}>
-              Try another keyword to find the subject you need.
+              {isTutor ? "You don't have any booked sessions yet." : "Try another keyword to find the subject you need."}
             </Text>
           </View>
         }
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={() => loadSubjects()}
+            onRefresh={() => loadDashboardData()}
             colors={[COLORS.primary]}
             tintColor={COLORS.primary}
           />
