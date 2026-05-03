@@ -349,3 +349,41 @@ export const runPaymentAutomation = async () => {
     }
   }
 };
+
+export const withdrawDispute = async ({ booking, payment, actorId }) => {
+  payment.status = "pending";
+  payment.disputedAt = null;
+  await payment.save();
+
+  booking.status = payment.tutorConfirmed ? "completed_by_tutor" : "funds_held";
+  booking.tutorMessage = ""; // Clear the dispute reason
+  await booking.save();
+
+  await writeLog({
+    paymentId: payment._id,
+    sessionId: booking._id,
+    actor: actorId,
+    actorRole: "student",
+    action: "payment_dispute_withdrawn",
+    details: {},
+  });
+
+  const admins = await User.find({ role: "admin" }).select("_id").lean();
+  if (admins.length) {
+    await Promise.all(
+      admins.map((admin) =>
+        pushNotification({
+          userId: admin._id,
+          bookingId: booking._id,
+          paymentId: payment._id,
+          type: "system",
+          title: "Dispute withdrawn",
+          message: `The dispute for session ${booking.subject || "a session"} was withdrawn by the student.`,
+          level: "info",
+        })
+      )
+    );
+  }
+
+  return payment;
+};

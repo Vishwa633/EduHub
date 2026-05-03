@@ -13,6 +13,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { API_URL } from "../../constants/api";
 import { useAuthStore } from "../../store/authStore";
 import { useColors } from "../../hooks/useColors";
+import ReportProblemModal from "../../components/ReportProblemModal";
 
 const normalizeStatus = (value) => String(value || "").trim().toLowerCase();
 
@@ -43,6 +44,8 @@ export default function SessionsPage() {
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState("");
   const [updatingId, setUpdatingId] = useState("");
+  const [reportModalVisible, setReportModalVisible] = useState(false);
+  const [selectedBookingId, setSelectedBookingId] = useState(null);
 
   const statusStyles = useMemo(() => ({
     pending: { bg: "#fef9c3", text: "#854d0e", border: "#eab308" },
@@ -396,6 +399,29 @@ export default function SessionsPage() {
             </TouchableOpacity>
           ) : null}
         </View>
+
+        {isStudent && (paymentStatus === "pending" || bookingStatus === "funds_held" || bookingStatus === "completed_by_tutor") && bookingId ? (
+          <TouchableOpacity
+            onPress={() => {
+              setSelectedBookingId(bookingId);
+              setReportModalVisible(true);
+            }}
+            style={{
+              marginTop: 12,
+              borderColor: COLORS.primary,
+              borderWidth: 1.5,
+              borderRadius: 10,
+              paddingVertical: 10,
+              alignItems: "center",
+              justifyContent: "center",
+              flexDirection: "row",
+              gap: 6,
+            }}
+          >
+            <Ionicons name="alert-circle-outline" size={16} color={COLORS.primary} />
+            <Text style={{ color: COLORS.primary, fontWeight: "700", fontSize: 13 }}>Report Problem</Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
     );
   };
@@ -456,6 +482,14 @@ export default function SessionsPage() {
             </Text>
           </View>
         }
+      />
+
+      <ReportProblemModal
+        visible={reportModalVisible}
+        onClose={() => setReportModalVisible(false)}
+        bookingId={selectedBookingId}
+        token={token}
+        onSuccess={() => loadSessions(true)}
       />
     </View>
   );

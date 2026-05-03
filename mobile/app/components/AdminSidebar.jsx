@@ -1,10 +1,130 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useColors } from "../../hooks/useColors";
 
 export default function AdminSidebar({ visible, onClose, actions = {}, user = {}, pendingTutorCount = 0, unreadAlertCount = 0 }) {
   const COLORS = useColors();
+  
+  const styles = useMemo(() => StyleSheet.create({
+    overlay: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 999,
+      flexDirection: "row",
+    },
+    backdrop: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.35)",
+    },
+    panel: {
+      width: 320,
+      paddingTop: 56,
+      paddingHorizontal: 18,
+      paddingBottom: 28,
+      borderRightWidth: 1,
+      backgroundColor: COLORS.cardBackground,
+      borderColor: COLORS.border,
+      shadowColor: "#000",
+      shadowOpacity: 0.08,
+      shadowRadius: 12,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: 18,
+      borderWidth: 1,
+      borderRadius: 14,
+      padding: 14,
+      borderColor: COLORS.border,
+    },
+    userInfo: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    avatar: {
+      width: 54,
+      height: 54,
+      borderRadius: 14,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 1,
+      backgroundColor: COLORS.inputBackground,
+      borderColor: COLORS.border,
+    },
+    userName: {
+      fontSize: 16,
+      fontWeight: "900",
+      color: COLORS.textPrimary,
+    },
+    userRole: {
+      fontSize: 12,
+      marginTop: 2,
+      color: COLORS.textSecondary,
+    },
+    closeBtn: {
+      padding: 6,
+    },
+    menu: {
+      marginTop: 12,
+    },
+    menuItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 14,
+      paddingVertical: 14,
+      paddingHorizontal: 12,
+      marginBottom: 10,
+      borderWidth: 1,
+      borderRadius: 12,
+      borderColor: COLORS.border,
+    },
+    menuLabel: {
+      fontSize: 16,
+      fontWeight: "900",
+      marginLeft: 12,
+      color: COLORS.textPrimary,
+    },
+    footer: {
+      marginTop: 16,
+      paddingTop: 0,
+    },
+    logout: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 14,
+      paddingVertical: 14,
+      paddingHorizontal: 12,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: COLORS.border,
+    },
+    logoutText: {
+      fontWeight: "900",
+      marginLeft: 8,
+      color: COLORS.textPrimary,
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: "900",
+      marginBottom: 10,
+      color: COLORS.textPrimary,
+    },
+    iconWrap: {
+      width: 36,
+      height: 36,
+      borderRadius: 10,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 1,
+      borderColor: COLORS.border,
+      backgroundColor: COLORS.inputBackground,
+    },
+  }), [COLORS]);
   if (!visible) return null;
 
   const items = [
@@ -68,109 +188,3 @@ export default function AdminSidebar({ visible, onClose, actions = {}, user = {}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 999,
-    flexDirection: "row",
-  },
-  backdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.35)",
-  },
-  panel: {
-    width: 320,
-    paddingTop: 56,
-    paddingHorizontal: 18,
-    paddingBottom: 28,
-    borderRightWidth: 1,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 18,
-    borderWidth: 1,
-    borderRadius: 14,
-    padding: 14,
-  },
-  userInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  avatar: {
-    width: 54,
-    height: 54,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-  },
-  userName: {
-    fontSize: 16,
-    fontWeight: "900",
-  },
-  userRole: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  closeBtn: {
-    padding: 6,
-  },
-  menu: {
-    marginTop: 12,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "900",
-    marginBottom: 10,
-  },
-  iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-  },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderRadius: 12,
-  },
-  menuLabel: {
-    fontSize: 16,
-    fontWeight: "900",
-    marginLeft: 12,
-  },
-  footer: {
-    marginTop: 16,
-    paddingTop: 0,
-  },
-  logout: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  logoutText: {
-    fontWeight: "900",
-    marginLeft: 8,
-  },
-});

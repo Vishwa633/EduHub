@@ -3,10 +3,12 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import SafeScreen from "../components/SafeScreen";
 import Loader from "../components/Loader";
+import NotificationContainer from "../components/NotificationContainer";
 import { StatusBar } from "expo-status-bar";
 
 import { useThemeStore } from "../store/themeStore";
 import { useAuthStore } from "../store/authStore";
+import { NotificationProvider } from "../store/notificationStore";
 import { useEffect, useRef } from "react";
 
 export default function RootLayout() {
@@ -55,9 +57,12 @@ export default function RootLayout() {
     return (
       <GestureHandlerRootView style={{ flex: 1 }}>
         <SafeAreaProvider>
-          <SafeScreen>
-            <Loader />
-          </SafeScreen>
+          <NotificationProvider>
+            <SafeScreen>
+              <Loader />
+              <NotificationContainer />
+            </SafeScreen>
+          </NotificationProvider>
           <StatusBar style="dark" />
         </SafeAreaProvider>
       </GestureHandlerRootView>
@@ -67,14 +72,17 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <SafeScreen>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(theme)" />
-            <Stack.Screen name="(auth)" />
-            <Stack.Screen name="(admin)" />
-            <Stack.Screen name="(tabs)" />
-          </Stack>
-        </SafeScreen>
+        <NotificationProvider>
+          <SafeScreen>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(theme)" />
+              <Stack.Screen name="(auth)" />
+              <Stack.Screen name="(admin)" />
+              <Stack.Screen name="(tabs)" />
+            </Stack>
+            <NotificationContainer />
+          </SafeScreen>
+        </NotificationProvider>
         <StatusBar style="dark" />
       </SafeAreaProvider>
     </GestureHandlerRootView>
