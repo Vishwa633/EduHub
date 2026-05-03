@@ -11,6 +11,7 @@ import materialRoutes from "./routes/materialRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import chatbotRoutes from "./routes/chatbotRoutes.js";
 import inquiryRoutes from "./routes/inquiryRoutes.js";
+import subjectRoutes from "./routes/subjectRoutes.js";
 
 import { startPaymentScheduler } from "./services/paymentScheduler.js";
 import { ensureDefaultAdmin } from "./services/seedAdmin.js";
@@ -20,6 +21,7 @@ import { app, server } from "./lib/socket.js";
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(cors());
 
 // Health check endpoint (no auth required)
@@ -36,6 +38,7 @@ app.use("/api/materials", materialRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/inquiries", inquiryRoutes);
+app.use("/api/subjects", subjectRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {

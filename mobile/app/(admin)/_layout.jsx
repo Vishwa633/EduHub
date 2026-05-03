@@ -118,6 +118,15 @@ export default function AdminLayout() {
         }}
       />
       <Tabs.Screen
+        name="subject-management"
+        options={{
+          title: "Subjects",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="book-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="admin-inquiries"
         options={{
           href: null,

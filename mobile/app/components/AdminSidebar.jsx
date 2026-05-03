@@ -132,7 +132,7 @@ export default function AdminSidebar({ visible, onClose, actions = {}, user = {}
     { key: "materials", label: "Learning Materials", icon: "book-outline", onPress: () => { onClose(); actions.openMaterials?.(); } },
     { key: "help", label: "Help Center", icon: "help-circle-outline", onPress: () => { onClose(); actions.openInquiries?.(); } },
     /* Messages and EduBot intentionally omitted from admin sidebar */
-    { key: "disputes", label: "Disputes", icon: "gavel-outline", onPress: () => { onClose(); actions.openDisputes?.(); } },
+    { key: "disputes", label: "Disputes", icon: "alert-circle-outline", onPress: () => { onClose(); actions.openDisputes?.(); } },
     { key: "payments", label: "Payments", icon: "cash-outline", onPress: () => { onClose(); actions.openPayments?.(); } },
   ];
 

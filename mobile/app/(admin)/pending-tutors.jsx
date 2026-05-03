@@ -43,6 +43,19 @@ export default function PendingTutorsPage() {
   const [busyTutorId, setBusyTutorId] = useState("");
   const [rejectTutor, setRejectTutor] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [knownSubjects, setKnownSubjects] = useState([]);
+
+  const loadKnownSubjects = async () => {
+    try {
+      const response = await fetch(`${API_URL}/subjects/public`);
+      if (response.ok) {
+        const data = await response.json();
+        setKnownSubjects((data || []).map(s => s.name.toLowerCase()));
+      }
+    } catch (e) {
+      console.error("Error fetching known subjects:", e);
+    }
+  };
 
   const loadPendingTutors = useCallback(async (isRefresh = false) => {
     try {
@@ -77,6 +90,7 @@ export default function PendingTutorsPage() {
   }, [token, user?.role]);
 
   useEffect(() => {
+    loadKnownSubjects();
     loadPendingTutors(false);
   }, [loadPendingTutors]);
 
@@ -356,6 +370,9 @@ export default function PendingTutorsPage() {
 
   const renderItem = ({ item }) => {
     const isBusy = String(busyTutorId) === String(item?._id);
+    const tutorSubject = item?.tutorProfile?.subject || "";
+    const isNewSubject = tutorSubject && knownSubjects.length > 0 && !knownSubjects.includes(tutorSubject.toLowerCase());
+
     return (
       <View style={styles.card}>
         <View style={styles.topRow}>
@@ -363,7 +380,12 @@ export default function PendingTutorsPage() {
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{item?.tutorProfile?.fullName || item?.username || "Tutor"}</Text>
             <Text style={styles.email}>{item?.email || "N/A"}</Text>
-            <Text style={styles.subject}>{item?.tutorProfile?.subject || "N/A"}</Text>
+            <Text style={styles.subject}>{tutorSubject || "N/A"}</Text>
+            {isNewSubject && (
+              <View style={[styles.chip, { backgroundColor: COLORS.error ? `${COLORS.error}15` : '#ff000015', marginTop: 4, marginBottom: 2 }]}>
+                <Text style={[styles.chipText, { color: COLORS.error || '#ff0000' }]}>Proposed Subject: Auto-Add on Accept</Text>
+              </View>
+            )}
             <View style={styles.chip}>
               <Text style={styles.chipText}>Pending Review</Text>
             </View>

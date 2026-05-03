@@ -6,6 +6,7 @@ import User from '../models/User.js';
 import InAppNotification from '../models/InAppNotification.js';
 import protectRoute from '../middleware/auth.middleware.js';
 import TutorRating from '../models/TutorRating.js';
+import Subject from '../models/Subject.js';
 
 const router = express.Router();
 
@@ -289,6 +290,27 @@ router.patch('/admin/users/:id/review', protectRoute, async (req, res) => {
             account.approvalStatus = 'approved';
             account.rejectionReason = '';
             await account.save();
+
+            // Auto-add new proposed subject to the app if it doesn't exist
+            if (account.tutorProfile && account.tutorProfile.subject) {
+                const subjectName = account.tutorProfile.subject.trim();
+                const existingSubject = await Subject.findOne({
+                    name: { $regex: new RegExp(`^${subjectName}$`, 'i') }
+                });
+
+                if (!existingSubject) {
+                    try {
+                        await Subject.create({
+                            name: subjectName,
+                            description: `Automatically added during the approval of tutor ${account.tutorProfile.fullName}`,
+                            isActive: true
+                        });
+                        console.log(`✅ Automatically created new subject: ${subjectName}`);
+                    } catch (subjectError) {
+                        console.error('❌ Error creating new subject automatically:', subjectError);
+                    }
+                }
+            }
 
             try {
                 await InAppNotification.create({

@@ -407,7 +407,7 @@ export default function Home() {
                 marginTop: 12
               }}
             >
-              <Ionicons name="gavel-outline" size={22} color={COLORS.primary} />
+              <Ionicons name="alert-circle-outline" size={22} color={COLORS.primary} />
               <Text style={{ color: COLORS.textPrimary, fontWeight: "900", fontSize: 16 }}>Disputes</Text>
             </TouchableOpacity>
 

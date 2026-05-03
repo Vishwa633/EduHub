@@ -3,7 +3,9 @@ import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
+  Modal,
   Platform,
+  SafeAreaView,
   ScrollView,
   Text,
   TextInput,
@@ -18,6 +20,7 @@ import * as ImagePicker from "expo-image-picker";
 
 import { useColors } from "../../hooks/useColors";
 import { useAuthStore } from "../../store/authStore";
+import { API_URL } from "../../constants/api";
 function UserAvatar({ uri, size = 80, borderRadius }) {
   const r = borderRadius ?? size / 2;
   const isReal = typeof uri === "string" && uri.trim().length > 0 && !uri.includes("dicebear.com");
@@ -137,6 +140,71 @@ function InputField({ label, icon, colors, containerStyle, ...inputProps }) {
 }
 
 function PickerField({ label, icon, colors, selectedValue, onValueChange, items, prompt }) {
+  const [showModal, setShowModal] = useState(false);
+  
+  const selectedItem = (items || []).find(i => String(i.value) === String(selectedValue));
+  const displayText = selectedItem ? selectedItem.label : prompt || "Select...";
+
+  if (Platform.OS === 'ios') {
+    return (
+      <View style={{ marginBottom: 16 }}>
+        <Text style={{ fontSize: 14, marginBottom: 8, color: colors.textPrimary, fontWeight: "500" }}>{label}</Text>
+        <TouchableOpacity 
+          activeOpacity={0.7}
+          onPress={() => setShowModal(true)}
+          style={{
+            backgroundColor: colors.inputBackground,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: colors.border,
+            height: 52,
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 12,
+          }}
+        >
+          {icon && <Ionicons name={icon} size={20} color={colors.primary} style={{ marginRight: 10 }} />}
+          <Text style={{ flex: 1, fontSize: 16, color: selectedValue ? colors.textDark : colors.placeholderText }}>
+            {displayText}
+          </Text>
+          <Ionicons name="chevron-down" size={20} color={colors.placeholderText} />
+        </TouchableOpacity>
+
+        <Modal visible={showModal} transparent animationType="slide">
+          <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <View style={{ backgroundColor: colors.background, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 40 }}>
+              <View style={{ 
+                flexDirection: 'row', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                padding: 16, 
+                borderBottomWidth: 1, 
+                borderBottomColor: colors.border 
+              }}>
+                <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.textPrimary }}>{label}</Text>
+                <TouchableOpacity onPress={() => setShowModal(false)}>
+                  <Text style={{ color: colors.primary, fontSize: 16, fontWeight: 'bold' }}>Done</Text>
+                </TouchableOpacity>
+              </View>
+              <Picker
+                selectedValue={selectedValue}
+                onValueChange={(value) => {
+                  onValueChange(toSafeText(value));
+                  if (Platform.OS === 'android') setShowModal(false);
+                }}
+                itemStyle={{ color: colors.textDark, fontSize: 20 }}
+              >
+                {items.map((item) => (
+                  <Picker.Item key={`${label}-${item.value}`} label={item.label} value={item.value} />
+                ))}
+              </Picker>
+            </View>
+          </View>
+        </Modal>
+      </View>
+    );
+  }
+
   return (
     <View style={{ marginBottom: 16 }}>
       <Text
@@ -160,7 +228,7 @@ function PickerField({ label, icon, colors, selectedValue, onValueChange, items,
           height: 52,
         }}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", height: 48, paddingLeft: 12 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", height: 52, paddingLeft: 12 }}>
           {icon ? (
             <Ionicons name={icon} size={20} color={colors.primary} style={{ marginRight: 8 }} />
           ) : null}
@@ -231,6 +299,24 @@ export default function Signup() {
   const [validationError, setValidationError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const successRedirectTimeoutRef = useRef(null);
+
+  const [publicSubjects, setPublicSubjects] = useState([]);
+  const [customSubject, setCustomSubject] = useState("");
+
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        const response = await fetch(`${API_URL}/subjects/public`);
+        if (response.ok) {
+          const data = await response.json();
+          setPublicSubjects(data || []);
+        }
+      } catch (err) {
+        console.error("Error fetching public subjects:", err);
+      }
+    };
+    fetchSubjects();
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -337,8 +423,13 @@ export default function Signup() {
         return;
       }
 
-      if (subject.trim().length < 2) {
-        showValidationError("Please enter your subject");
+      if (subject === "Other" && customSubject.trim().length < 2) {
+        showValidationError("Please enter your proposed subject");
+        return;
+      }
+
+      if (subject !== "Other" && subject.trim().length < 2) {
+        showValidationError("Please select a subject");
         return;
       }
 
@@ -508,8 +599,13 @@ export default function Signup() {
           return;
         }
 
-        if (subject.trim().length < 2) {
-          showValidationError("Please enter your subject");
+        if (subject === "Other" && customSubject.trim().length < 2) {
+          showValidationError("Please enter your proposed subject");
+          return;
+        }
+
+        if (subject !== "Other" && subject.trim().length < 2) {
+          showValidationError("Please select a subject");
           return;
         }
 
@@ -547,7 +643,7 @@ export default function Signup() {
 
         payload.tutorProfile = {
           fullName: fullName.trim(),
-          subject: subject.trim(),
+          subject: subject === "Other" ? customSubject.trim() : subject.trim(),
           bio: bio.trim(),
           mobileNumber: mobileNumber.trim(),
           experienceLevel,
@@ -849,14 +945,34 @@ export default function Signup() {
                     onChangeText={(text) => setFullName(toSafeText(text))}
                   />
 
-                  <InputField
+                  <PickerField
+                    key={`subject-picker-${publicSubjects.length}`}
                     label="Subject"
                     icon="book-outline"
                     colors={colors}
-                    placeholder="e.g., Mathematics, English"
-                    value={subject}
-                    onChangeText={(text) => setSubject(toSafeText(text))}
+                    selectedValue={subject}
+                    onValueChange={setSubject}
+                    prompt="Select Subject"
+                    items={[
+                      { label: "Select Subject", value: "" },
+                      ...(Array.isArray(publicSubjects) ? publicSubjects : []).map((s) => ({ 
+                        label: String(s?.name || s || "Unknown"), 
+                        value: String(s?.name || s || "Unknown") 
+                      })),
+                      { label: "Other (Please specify)", value: "Other" },
+                    ]}
                   />
+
+                  {subject === "Other" && (
+                    <InputField
+                      label="Proposed Subject"
+                      icon="add-circle-outline"
+                      colors={colors}
+                      placeholder="e.g., Advanced Mathematics"
+                      value={customSubject}
+                      onChangeText={(text) => setCustomSubject(toSafeText(text))}
+                    />
+                  )}
 
                   <InputField
                     label="Mobile Number"
