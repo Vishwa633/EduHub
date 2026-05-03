@@ -98,4 +98,75 @@ router.post("/send/:id", protectRoute, async (req, res) => {
   }
 });
 
+// Edit a message
+router.put("/edit/:id", protectRoute, async (req, res) => {
+  try {
+    const { text } = req.body;
+    const { id: messageId } = req.params;
+    const senderId = req.user._id;
+
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    if (message.senderId.toString() !== senderId.toString()) {
+      return res.status(403).json({ message: "Unauthorized to edit this message" });
+    }
+
+    if (message.isDeleted) {
+      return res.status(400).json({ message: "Cannot edit a deleted message" });
+    }
+
+    message.text = text;
+    message.isEdited = true;
+    await message.save();
+
+    const receiverSocketId = getReceiverSocketId(message.receiverId.toString());
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("messageEdited", message);
+    }
+
+    res.status(200).json(message);
+  } catch (error) {
+    console.error("Error in editMessage:", error.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Delete a message
+router.delete("/delete/:id", protectRoute, async (req, res) => {
+  try {
+    const { id: messageId } = req.params;
+    const senderId = req.user._id;
+
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    if (message.senderId.toString() !== senderId.toString()) {
+      return res.status(403).json({ message: "Unauthorized to delete this message" });
+    }
+
+    if (message.isDeleted) {
+      return res.status(400).json({ message: "Message already deleted" });
+    }
+
+    message.text = "This message was deleted";
+    message.isDeleted = true;
+    await message.save();
+
+    const receiverSocketId = getReceiverSocketId(message.receiverId.toString());
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("messageDeleted", message);
+    }
+
+    res.status(200).json(message);
+  } catch (error) {
+    console.error("Error in deleteMessage:", error.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 export default router;

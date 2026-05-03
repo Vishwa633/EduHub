@@ -9,7 +9,9 @@ import {
   Platform,
   ActivityIndicator,
   StyleSheet,
+  Alert,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -24,14 +26,18 @@ export default function ChatScreen() {
     messages,
     getMessages,
     sendMessage,
+    editMessage,
+    deleteMessage,
     subscribeToMessages,
     unsubscribeFromMessages,
     selectedUser,
   } = useChatStore();
   const { user } = useAuthStore();
   const COLORS = useColors();
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const [text, setText] = useState("");
+  const [editingMessageId, setEditingMessageId] = useState(null);
   const flatListRef = useRef(null);
 
   useEffect(() => {
@@ -45,17 +51,52 @@ export default function ChatScreen() {
 
   const handleSend = async () => {
     if (!text.trim()) return;
-    await sendMessage({ text: text.trim() });
+    if (editingMessageId) {
+      await editMessage(editingMessageId, text.trim());
+      setEditingMessageId(null);
+    } else {
+      await sendMessage({ text: text.trim() });
+    }
     setText("");
+  };
+
+  const handleLongPress = (item) => {
+    const userId = user?.id || user?._id;
+    if (item.senderId !== userId || item.isDeleted) return;
+    
+    Alert.alert(
+      "Message Options",
+      "Choose an action",
+      [
+        { text: "Edit", onPress: () => {
+            setEditingMessageId(item._id);
+            setText(item.text);
+          } 
+        },
+        { text: "Delete", style: "destructive", onPress: () => {
+            Alert.alert("Delete Message", "Are you sure you want to delete this message?", [
+              { text: "Cancel", style: "cancel" },
+              { text: "Delete", style: "destructive", onPress: () => deleteMessage(item._id) }
+            ]);
+          } 
+        },
+        { text: "Cancel", style: "cancel" }
+      ]
+    );
   };
 
   const renderMessage = ({ item }) => {
     const userId = user?.id || user?._id;
     const isMe = item.senderId === userId;
+    const isDeleted = item.isDeleted;
+    const displayColor = isDeleted ? (isMe ? "rgba(255,255,255,0.7)" : COLORS.textSecondary) : (isMe ? COLORS.white : COLORS.textPrimary);
+    const fontStyle = isDeleted ? "italic" : "normal";
     
     return (
       <View style={[styles.messageWrapper, isMe ? styles.myMessageWrapper : styles.otherMessageWrapper]}>
-        <View
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onLongPress={() => handleLongPress(item)}
           style={[
             styles.messageBubble,
             isMe
@@ -63,14 +104,19 @@ export default function ChatScreen() {
               : { backgroundColor: COLORS.cardBackground, borderBottomLeftRadius: 4, borderWidth: 1, borderColor: COLORS.border },
           ]}
         >
-          <Text style={[styles.messageText, { color: isMe ? COLORS.white : COLORS.textPrimary }]}>
+          <Text style={[styles.messageText, { color: displayColor, fontStyle }]}>
             {item.text}
           </Text>
           <View style={styles.messageFooter}>
             <Text style={[styles.messageTime, { color: isMe ? "rgba(255,255,255,0.7)" : COLORS.textSecondary }]}>
               {new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </Text>
-            {isMe && (
+            {item.isEdited && !isDeleted && (
+              <Text style={[styles.messageTime, { color: isMe ? "rgba(255,255,255,0.7)" : COLORS.textSecondary, marginLeft: 4 }]}>
+                (edited)
+              </Text>
+            )}
+            {isMe && !isDeleted && (
               <Ionicons 
                 name="checkmark-done" 
                 size={14} 
@@ -79,7 +125,7 @@ export default function ChatScreen() {
               />
             )}
           </View>
-        </View>
+        </TouchableOpacity>
       </View>
     );
   };
@@ -122,7 +168,18 @@ export default function ChatScreen() {
         />
 
         {/* Input Area */}
-        <View style={[styles.inputContainer, { borderTopColor: COLORS.border }]}>
+        <View style={[styles.inputContainer, { borderTopColor: COLORS.border, paddingBottom: Math.max(insets.bottom, 10) }]}>
+          {editingMessageId && (
+            <TouchableOpacity 
+              style={{ marginRight: 10 }}
+              onPress={() => {
+                setEditingMessageId(null);
+                setText("");
+              }}
+            >
+              <Ionicons name="close-circle" size={24} color={COLORS.textSecondary} />
+            </TouchableOpacity>
+          )}
           <TextInput
             style={[styles.input, { backgroundColor: COLORS.cardBackground, color: COLORS.textPrimary, borderColor: COLORS.border }]}
             placeholder="Type a message..."
@@ -136,7 +193,7 @@ export default function ChatScreen() {
             onPress={handleSend}
             disabled={!text.trim()}
           >
-            <Ionicons name="send" size={20} color={COLORS.white} />
+            <Ionicons name={editingMessageId ? "checkmark" : "send"} size={20} color={COLORS.white} />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

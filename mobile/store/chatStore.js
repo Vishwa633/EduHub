@@ -68,6 +68,46 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
+  editMessage: async (messageId, text) => {
+    const { messages } = get();
+    try {
+      const { token } = useAuthStore.getState();
+      const res = await fetch(`${API_URL}/messages/edit/${messageId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ text }),
+      });
+      const data = await res.json();
+      set({
+        messages: messages.map((m) => (m._id === messageId ? data : m)),
+      });
+    } catch (error) {
+      console.error("Error in editMessage:", error);
+    }
+  },
+
+  deleteMessage: async (messageId) => {
+    const { messages } = get();
+    try {
+      const { token } = useAuthStore.getState();
+      const res = await fetch(`${API_URL}/messages/delete/${messageId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      set({
+        messages: messages.map((m) => (m._id === messageId ? data : m)),
+      });
+    } catch (error) {
+      console.error("Error in deleteMessage:", error);
+    }
+  },
+
   subscribeToMessages: () => {
     const { selectedUser, socket } = get();
     if (!socket) return;
@@ -80,12 +120,32 @@ export const useChatStore = create((set, get) => ({
         messages: [...get().messages, newMessage],
       });
     });
+
+    socket.on("messageEdited", (editedMessage) => {
+      const isMessageFromSelectedUser = editedMessage.senderId === selectedUser?._id;
+      if (!isMessageFromSelectedUser) return;
+
+      set({
+        messages: get().messages.map((m) => (m._id === editedMessage._id ? editedMessage : m)),
+      });
+    });
+
+    socket.on("messageDeleted", (deletedMessage) => {
+      const isMessageFromSelectedUser = deletedMessage.senderId === selectedUser?._id;
+      if (!isMessageFromSelectedUser) return;
+
+      set({
+        messages: get().messages.map((m) => (m._id === deletedMessage._id ? deletedMessage : m)),
+      });
+    });
   },
 
   unsubscribeFromMessages: () => {
     const { socket } = get();
     if (!socket) return;
     socket.off("newMessage");
+    socket.off("messageEdited");
+    socket.off("messageDeleted");
   },
 
   setSelectedUser: (selectedUser) => set({ selectedUser }),
