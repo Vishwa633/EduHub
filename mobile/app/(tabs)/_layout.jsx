@@ -75,25 +75,7 @@ export default function TabLayout() {
 
             {/* Materials and Help are available in the admin sidebar; removed from bottom tabs */}
 
-            <Tabs.Screen
-                name="messages"
-                options={{
-                    title: 'Messages',
-                    tabBarIcon: ({ color, size }) => (
-                        <Ionicons name='chatbubble-ellipses-outline' size={size} color={color} />
-                    ),
-                }}
-            />
-
-            <Tabs.Screen
-                name="edubot"
-                options={{
-                    title: 'EduBot',
-                    tabBarIcon: ({ color, size }) => (
-                        <Ionicons name='bulb-outline' size={size} color={color} />
-                    ),
-                }}
-            />
+            {/* Messages and EduBot moved to the Admin sidebar per UI change */}
 
             <Tabs.Screen
                 name="profile"
@@ -115,6 +97,9 @@ export default function TabLayout() {
             <Tabs.Screen name="notifications" options={{ href: null }} />
             <Tabs.Screen name="payment-success" options={{ href: null }} />
             <Tabs.Screen name="favourites" options={{ href: null }} />
+            <Tabs.Screen name="messages" options={{ href: null }} />
+            <Tabs.Screen name="edubot" options={{ href: null }} />
+            <Tabs.Screen name="disputes" options={{ href: null }} />
             <Tabs.Screen name="tutor/reviews" options={{ href: null }} />
             <Tabs.Screen name="inquiries" options={{ href: null }} />
             <Tabs.Screen name="materials" options={{ href: null }} />

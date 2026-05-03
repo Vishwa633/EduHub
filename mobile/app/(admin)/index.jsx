@@ -420,6 +420,9 @@ export default function AdminHome() {
   const openSessions = () => router.push("/(admin)/sessions");
   const openPendingTutors = () => router.push("/(admin)/pending-tutors");
   const openNotifications = () => router.push("/(admin)/notifications");
+  const openDisputes = () => router.push("/(admin)/admin-disputes");
+  const openMessages = () => router.push("/messages");
+  const openEduBot = () => router.push("/edubot");
 
   const onLogout = async () => {
     if (Platform.OS === 'web') {
@@ -586,7 +589,7 @@ export default function AdminHome() {
     <AdminSidebar
       visible={sidebarOpen}
       onClose={() => setSidebarOpen(false)}
-      actions={{ openSessions, openUserDetails, openPendingTutors, openNotifications, openPayments: (f) => router.push("/(admin)/payments"), openDisputes: () => router.push("/(admin)/admin-disputes"), openInquiries: () => router.push("/(admin)/admin-inquiries"), onLogout }}
+      actions={{ openSessions, openUserDetails, openPendingTutors, openNotifications, openPayments: (f) => router.push("/(admin)/payments"), openDisputes, openInquiries: () => router.push("/(admin)/admin-inquiries"), openMessages, openEduBot, onLogout }}
       user={user}
       pendingTutorCount={pendingTutorCount}
       unreadAlertCount={unreadAlertCount}

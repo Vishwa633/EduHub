@@ -128,12 +128,12 @@ export default function AdminSidebar({ visible, onClose, actions = {}, user = {}
   if (!visible) return null;
 
   const items = [
-    { key: "dashboard", label: "Dashboard", icon: "grid-outline", onPress: () => { onClose(); } },
-    { key: "sessions", label: "Sessions", icon: "calendar-outline", onPress: () => { onClose(); actions.openSessions?.(); } },
-    { key: "users", label: "Users", icon: "people-outline", onPress: () => { onClose(); actions.openUserDetails?.(); } },
-    { key: "pending", label: `Pending (${pendingTutorCount})`, icon: "time-outline", onPress: () => { onClose(); actions.openPendingTutors?.(); } },
+    { key: "favourites", label: "Favourites", icon: "heart-outline", onPress: () => { onClose(); actions.openFavourites?.(); } },
+    { key: "materials", label: "Learning Materials", icon: "book-outline", onPress: () => { onClose(); actions.openMaterials?.(); } },
+    { key: "help", label: "Help Center", icon: "help-circle-outline", onPress: () => { onClose(); actions.openInquiries?.(); } },
+    /* Messages and EduBot intentionally omitted from admin sidebar */
+    { key: "disputes", label: "Disputes", icon: "gavel-outline", onPress: () => { onClose(); actions.openDisputes?.(); } },
     { key: "payments", label: "Payments", icon: "cash-outline", onPress: () => { onClose(); actions.openPayments?.(); } },
-    { key: "inquiries", label: "Inquiries", icon: "help-circle-outline", onPress: () => { onClose(); actions.openInquiries?.(); } },
   ];
 
   return (

@@ -150,6 +150,21 @@ export default function Home() {
     router.push("/(tabs)/favourites");
   }, [closeSideMenu, router]);
 
+  const openMessages = useCallback(() => {
+    closeSideMenu();
+    router.push("/(tabs)/messages");
+  }, [closeSideMenu, router]);
+
+  const openEduBot = useCallback(() => {
+    closeSideMenu();
+    router.push("/(tabs)/edubot");
+  }, [closeSideMenu, router]);
+
+  const openDisputes = useCallback(() => {
+    closeSideMenu();
+    router.push("/(tabs)/disputes");
+  }, [closeSideMenu, router]);
+
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.background }}>
 
@@ -314,6 +329,69 @@ export default function Home() {
             >
               <Ionicons name="help-circle-outline" size={22} color={COLORS.primary} />
               <Text style={{ color: COLORS.textPrimary, fontWeight: "900", fontSize: 16 }}>Help Center</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => {
+                openMessages();
+              }}
+              style={{
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: COLORS.border,
+                backgroundColor: COLORS.inputBackground,
+                paddingVertical: 16,
+                paddingHorizontal: 14,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 14,
+                marginTop: 12
+              }}
+            >
+              <Ionicons name="chatbubble-ellipses-outline" size={22} color={COLORS.primary} />
+              <Text style={{ color: COLORS.textPrimary, fontWeight: "900", fontSize: 16 }}>Messages</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => {
+                openEduBot();
+              }}
+              style={{
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: COLORS.border,
+                backgroundColor: COLORS.inputBackground,
+                paddingVertical: 16,
+                paddingHorizontal: 14,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 14,
+                marginTop: 12
+              }}
+            >
+              <Ionicons name="bulb-outline" size={22} color={COLORS.primary} />
+              <Text style={{ color: COLORS.textPrimary, fontWeight: "900", fontSize: 16 }}>EduBot</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => {
+                openDisputes();
+              }}
+              style={{
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: COLORS.border,
+                backgroundColor: COLORS.inputBackground,
+                paddingVertical: 16,
+                paddingHorizontal: 14,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 14,
+                marginTop: 12
+              }}
+            >
+              <Ionicons name="gavel-outline" size={22} color={COLORS.primary} />
+              <Text style={{ color: COLORS.textPrimary, fontWeight: "900", fontSize: 16 }}>Disputes</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
