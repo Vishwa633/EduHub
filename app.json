@@ -1,18 +1,14 @@
 {
   "expo": {
-    "extra": {
-      "eas": {
-        "projectId": "d1df5681-2df9-45b0-b1e7-15a166ed505a"
-      }
-    },
+    "name": "EduHub",
+    "slug": "eduhub",
     "owner": "vishwa633",
     "android": {
       "package": "com.vishwa633.eduhub"
     },
-    "ios": {
-      "bundleIdentifier": "com.vishwa633.eduhub",
-      "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+    "extra": {
+      "eas": {
+        "projectId": "0b06d614-fb7e-4be0-a1e9-5ae34381c31f"
       }
     }
   }
