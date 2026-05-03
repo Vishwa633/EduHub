@@ -35,5 +35,5 @@ const resolveApiHost = () => {
 };
 
 export const API_URL =
-	process.env.EXPO_PUBLIC_API_URL ||
-	`http://${resolveApiHost()}:${DEFAULT_API_PORT}/api`;
+	(process.env.EXPO_PUBLIC_API_URL ||
+		`http://${resolveApiHost()}:${DEFAULT_API_PORT}/api`).replace(/\/$/, "");
