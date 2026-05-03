@@ -46,6 +46,7 @@ export default function SessionsPage() {
   const [updatingId, setUpdatingId] = useState("");
   const [reportModalVisible, setReportModalVisible] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState(null);
+  const [activeTab, setActiveTab] = useState("active"); // "active" or "completed"
 
   const statusStyles = useMemo(() => ({
     pending: { bg: "#fef9c3", text: "#854d0e", border: "#eab308" },
@@ -130,7 +131,6 @@ export default function SessionsPage() {
       loadSessions(false);
     }, [loadSessions]),
   );
-
   const sortedSessions = useMemo(() => {
     const source = isTutor
       ? sessions.filter((entry) => {
@@ -141,20 +141,43 @@ export default function SessionsPage() {
         })
       : sessions;
 
-    return [...source].sort((a, b) => {
+    const parseTime = (timeStr) => {
+      if (!timeStr) return 0;
+      const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+      if (!match) return 0;
+      let [_, hours, minutes, modifier] = match;
+      hours = parseInt(hours);
+      minutes = parseInt(minutes);
+      if (modifier.toUpperCase() === "PM" && hours < 12) hours += 12;
+      if (modifier.toUpperCase() === "AM" && hours === 12) hours = 0;
+      return hours * 60 + minutes;
+    };
+
+    const filtered = source.filter((entry) => {
+      const status = normalizeStatus(entry?.status);
+      const isCompleted = ["completed_by_tutor", "released", "refunded", "rejected"].includes(status);
+      return activeTab === "completed" ? isCompleted : !isCompleted;
+    });
+
+    return [...filtered].sort((a, b) => {
       const statusA = normalizeStatus(a?.status);
       const statusB = normalizeStatus(b?.status);
       
-      // Pending sessions go to top
+      // 1. Pending sessions go to top
       if (statusA === "pending" && statusB !== "pending") return -1;
       if (statusB === "pending" && statusA !== "pending") return 1;
       
-      // Otherwise sort by date (newest first)
+      // 2. Sort by date (chronological - upcoming first)
       const dateA = new Date(a?.sessionDate || 0).getTime();
       const dateB = new Date(b?.sessionDate || 0).getTime();
-      return dateB - dateA;
+      if (dateA !== dateB) return dateA - dateB;
+
+      // 3. Sort by time (start time)
+      const timeA = parseTime(String(a?.sessionTime || "").split("-")[0]);
+      const timeB = parseTime(String(b?.sessionTime || "").split("-")[0]);
+      return timeA - timeB;
     });
-  }, [sessions, isTutor]);
+  }, [sessions, isTutor, activeTab]);
 
   const deleteSession = useCallback(async (bookingId) => {
     try {
@@ -453,6 +476,42 @@ export default function SessionsPage() {
         </Text>
       </View>
 
+      <View style={{ flexDirection: "row", paddingHorizontal: 16, marginBottom: 12, gap: 12 }}>
+        <TouchableOpacity 
+          onPress={() => setActiveTab("active")}
+          style={{
+            flex: 1,
+            paddingVertical: 10,
+            borderRadius: 12,
+            backgroundColor: activeTab === "active" ? COLORS.primary : COLORS.inputBackground,
+            alignItems: "center",
+            borderWidth: 1,
+            borderColor: activeTab === "active" ? COLORS.primary : COLORS.border
+          }}
+        >
+          <Text style={{ color: activeTab === "active" ? COLORS.white : COLORS.textPrimary, fontWeight: "800", fontSize: 14 }}>
+            Active
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          onPress={() => setActiveTab("completed")}
+          style={{
+            flex: 1,
+            paddingVertical: 10,
+            borderRadius: 12,
+            backgroundColor: activeTab === "completed" ? COLORS.primary : COLORS.inputBackground,
+            alignItems: "center",
+            borderWidth: 1,
+            borderColor: activeTab === "completed" ? COLORS.primary : COLORS.border
+          }}
+        >
+          <Text style={{ color: activeTab === "completed" ? COLORS.white : COLORS.textPrimary, fontWeight: "800", fontSize: 14 }}>
+            Completed
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       {!!error ? (
         <View style={{ marginHorizontal: 16, marginBottom: 10, padding: 10, borderRadius: 10, backgroundColor: COLORS.inputBackground, borderWidth: 1, borderColor: COLORS.border }}>
           <Text style={{ color: COLORS.textSecondary, fontWeight: "700" }}>{error}</Text>
@@ -476,9 +535,9 @@ export default function SessionsPage() {
           <View style={{ alignItems: "center", justifyContent: "center", paddingTop: 40 }}>
             <Ionicons name="calendar-clear-outline" size={42} color={COLORS.textSecondary} />
             <Text style={{ color: COLORS.textSecondary, marginTop: 10, textAlign: "center" }}>
-              {isTutor
-                ? "No sessions yet. New requests will appear here."
-                : "No booked sessions yet."}
+              {activeTab === "active" 
+                ? (isTutor ? "No active sessions. New requests will appear here." : "No active sessions yet.")
+                : "No completed sessions yet."}
             </Text>
           </View>
         }

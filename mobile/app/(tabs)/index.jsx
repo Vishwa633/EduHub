@@ -466,7 +466,7 @@ export default function Home() {
       </Modal>
 
       <FlatList
-        data={isTutor ? filteredSessions : filteredSubjects}
+        data={isTutor ? [] : filteredSubjects}
         keyExtractor={(item, index) => {
           if (isTutor) return item._id || String(index);
           if (typeof item === 'object' && item !== null) return item._id || item.name || String(index);
@@ -690,63 +690,67 @@ export default function Home() {
               </View>
             )}
 
-            <View style={{ borderRadius: 28, padding: 18, marginBottom: 16, backgroundColor: COLORS.white, borderWidth: 1, borderColor: '#e6edf5', boxShadow: '0px 8px 14px rgba(0, 0, 0, 0.08)', elevation: 3 }}>
-              <Text style={{ fontSize: 36, fontWeight: '900', color: COLORS.textPrimary, letterSpacing: 0.2, lineHeight: 40 }}>
-                {isTutor ? "Your Bookings" : "Subjects"}
-              </Text>
-              <Text style={{ fontSize: 14, color: COLORS.textSecondary, marginTop: 4, lineHeight: 20 }}>
-                {isTutor ? "Manage your upcoming sessions with students." : "Pick a subject and jump straight into the tutors who teach it."}
-              </Text>
-
-              <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.inputBackground, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 12, borderWidth: 1, borderColor: COLORS.border }}>
-                  <Ionicons name={isTutor ? "calendar-outline" : "grid-outline"} size={14} color={COLORS.primary} />
-                  <Text style={{ color: COLORS.textPrimary, fontSize: 12, fontWeight: '700', marginLeft: 6 }}>
-                    {isTutor ? `${filteredSessions.length} active sessions` : `${filteredSubjects.length} subjects`}
+            {!isTutor && (
+              <>
+                <View style={{ borderRadius: 28, padding: 18, marginBottom: 16, backgroundColor: COLORS.white, borderWidth: 1, borderColor: '#e6edf5', boxShadow: '0px 8px 14px rgba(0, 0, 0, 0.08)', elevation: 3 }}>
+                  <Text style={{ fontSize: 36, fontWeight: '900', color: COLORS.textPrimary, letterSpacing: 0.2, lineHeight: 40 }}>
+                    Subjects
                   </Text>
-                </View>
-              </View>
-            </View>
+                  <Text style={{ fontSize: 14, color: COLORS.textSecondary, marginTop: 4, lineHeight: 20 }}>
+                    Pick a subject and jump straight into the tutors who teach it.
+                  </Text>
 
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: COLORS.white,
-                borderWidth: 1,
-                borderColor: COLORS.border,
-                borderRadius: 14,
-                paddingHorizontal: 12,
-                paddingVertical: 2,
-                marginBottom: 8,
-              }}
-            >
-              <Ionicons name="search-outline" size={18} color={COLORS.textSecondary} />
-              <TextInput
-                value={subjectQuery}
-                onChangeText={setSubjectQuery}
-                placeholder={isTutor ? "Search students..." : "Search subjects..."}
-                placeholderTextColor={COLORS.textSecondary}
-                underlineColorAndroid="transparent"
-                autoCorrect={false}
-                spellCheck={false}
-                autoCapitalize="none"
-                style={{
-                  flex: 1,
-                  height: 42,
-                  marginLeft: 8,
-                  color: COLORS.textPrimary,
-                  fontSize: 14,
-                  fontWeight: "600",
-                  textDecorationLine: "none",
-                }}
-              />
-              {subjectQuery ? (
-                <TouchableOpacity onPress={() => setSubjectQuery("")} style={{ padding: 4 }}>
-                  <Ionicons name="close-circle" size={18} color={COLORS.textSecondary} />
-                </TouchableOpacity>
-              ) : null}
-            </View>
+                  <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.inputBackground, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 12, borderWidth: 1, borderColor: COLORS.border }}>
+                      <Ionicons name="grid-outline" size={14} color={COLORS.primary} />
+                      <Text style={{ color: COLORS.textPrimary, fontSize: 12, fontWeight: '700', marginLeft: 6 }}>
+                        {`${filteredSubjects.length} subjects`}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: COLORS.white,
+                    borderWidth: 1,
+                    borderColor: COLORS.border,
+                    borderRadius: 14,
+                    paddingHorizontal: 12,
+                    paddingVertical: 2,
+                    marginBottom: 8,
+                  }}
+                >
+                  <Ionicons name="search-outline" size={18} color={COLORS.textSecondary} />
+                  <TextInput
+                    value={subjectQuery}
+                    onChangeText={setSubjectQuery}
+                    placeholder="Search subjects..."
+                    placeholderTextColor={COLORS.textSecondary}
+                    underlineColorAndroid="transparent"
+                    autoCorrect={false}
+                    spellCheck={false}
+                    autoCapitalize="none"
+                    style={{
+                      flex: 1,
+                      height: 42,
+                      marginLeft: 8,
+                      color: COLORS.textPrimary,
+                      fontSize: 14,
+                      fontWeight: "600",
+                      textDecorationLine: "none",
+                    }}
+                  />
+                  {subjectQuery ? (
+                    <TouchableOpacity onPress={() => setSubjectQuery("")} style={{ padding: 4 }}>
+                      <Ionicons name="close-circle" size={18} color={COLORS.textSecondary} />
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+              </>
+            )}
 
             {!!errorMessage && (
               <View
@@ -766,15 +770,17 @@ export default function Home() {
           </View>
         }
         ListEmptyComponent={
-          <View style={{ paddingHorizontal: 24, paddingTop: 30, alignItems: "center" }}>
-            <Ionicons name="search-outline" size={26} color={COLORS.textSecondary} />
-            <Text style={{ marginTop: 10, color: COLORS.textPrimary, fontWeight: "800", fontSize: 16 }}>
-              {isTutor ? "No students found" : "No subjects found"}
-            </Text>
-            <Text style={{ marginTop: 4, color: COLORS.textSecondary, textAlign: "center" }}>
-              {isTutor ? "You don't have any booked sessions yet." : "Try another keyword to find the subject you need."}
-            </Text>
-          </View>
+          isTutor ? null : (
+            <View style={{ paddingHorizontal: 24, paddingTop: 30, alignItems: "center" }}>
+              <Ionicons name="search-outline" size={26} color={COLORS.textSecondary} />
+              <Text style={{ marginTop: 10, color: COLORS.textPrimary, fontWeight: "800", fontSize: 16 }}>
+                No subjects found
+              </Text>
+              <Text style={{ marginTop: 4, color: COLORS.textSecondary, textAlign: "center" }}>
+                Try another keyword to find the subject you need.
+              </Text>
+            </View>
+          )
         }
         refreshControl={
           <RefreshControl
