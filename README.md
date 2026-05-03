@@ -59,6 +59,17 @@ The system also includes an **admin panel** to manage users, monitor activities,
 - Vercel (Frontend)
 - Render (Backend)
 
+### 📱 APK Build
+
+The Expo app is rooted in [mobile/](mobile), so run EAS from that folder:
+
+```bash
+cd mobile
+npx eas-cli@latest workflow:run .eas/workflows/create-production-builds.yml
+```
+
+The mobile folder now has its own [eas.json](mobile/eas.json) and workflow file, so the APK build uses the real app root.
+
 ### 🧰 Tools & Services
 - Cloudinary (media uploads)
 - Git & GitHub (version control)

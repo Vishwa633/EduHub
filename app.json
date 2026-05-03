@@ -5,6 +5,15 @@
         "projectId": "d1df5681-2df9-45b0-b1e7-15a166ed505a"
       }
     },
-    "owner": "vishwa633"
+    "owner": "vishwa633",
+    "android": {
+      "package": "com.vishwa633.eduhub"
+    },
+    "ios": {
+      "bundleIdentifier": "com.vishwa633.eduhub",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
   }
 }
