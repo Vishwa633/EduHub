@@ -28,6 +28,7 @@ export default function TutorReviewsPage() {
 
   useEffect(() => {
     const fetchReviews = async () => {
+      if (!id || id === "undefined") return;
       try {
         setLoading(true);
         setErrorMessage("");
@@ -121,8 +122,12 @@ export default function TutorReviewsPage() {
     <View style={{ flex: 1, backgroundColor: COLORS.background, padding: 16 }}>
       <TouchableOpacity
         onPress={() => {
-          // Always go to the tutor details page for this tutor
-          router.replace({ pathname: '/(tabs)/tutor/[id]', params: { id } });
+          // If I am the tutor viewing my own reviews, go back to dashboard
+          if (user?.role === 'tutor' && (user?._id === id || user?.id === id)) {
+            router.replace('/(tabs)');
+          } else {
+            router.replace({ pathname: '/(tabs)/tutor/[id]', params: { id } });
+          }
         }}
         style={{ marginBottom: 16, alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: COLORS.cardBackground, borderWidth: 1, borderColor: COLORS.border }}
         activeOpacity={0.7}

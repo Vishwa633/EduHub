@@ -195,6 +195,7 @@ export default function TutorDetailsPage() {
 
   // Move fetchTutorDetails outside useEffect so it can be called elsewhere
   const fetchTutorDetails = async () => {
+    if (!id || id === "undefined") return;
     try {
       setLoading(true);
       setErrorMessage("");

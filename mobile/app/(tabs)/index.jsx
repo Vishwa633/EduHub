@@ -30,6 +30,7 @@ export default function Home() {
   const router = useRouter();
   const [subjects, setSubjects] = useState([]);
   const [tutorSessions, setTutorSessions] = useState([]);
+  const [tutorProfileData, setTutorProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -61,15 +62,23 @@ export default function Home() {
       }
 
       if (isTutor) {
-        const response = await fetch(`${API_URL}/bookings/tutor`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const [sessionRes, profileRes] = await Promise.all([
+          fetch(`${API_URL}/bookings/tutor`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${API_URL}/tutors/profile/me`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+        ]);
 
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || "Failed to fetch tutor sessions");
+        const sessionData = await sessionRes.json();
+        if (!sessionRes.ok) throw new Error(sessionData.message || "Failed to fetch tutor sessions");
+        setTutorSessions(Array.isArray(sessionData) ? sessionData : []);
 
-        const safeSessions = Array.isArray(data) ? data : [];
-        setTutorSessions(safeSessions);
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          setTutorProfileData(profileData);
+        }
       } else {
         const response = await fetch(`${API_URL}/tutors/subjects`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -585,19 +594,115 @@ export default function Home() {
         }}
         ListHeaderComponent={
           <View style={{ paddingHorizontal: 8, paddingTop: 16, paddingBottom: 16 }}>
+            {isTutor && tutorProfileData && (
+              <View style={{ marginBottom: 20 }}>
+                {/* Rating Summary Card */}
+                <View style={{ backgroundColor: COLORS.white, borderRadius: 20, padding: 18, marginBottom: 16, borderWidth: 1, borderColor: COLORS.border, elevation: 2, boxShadow: '0px 4px 10px rgba(0,0,0,0.05)' }}>
+                  <Text style={{ fontSize: 18, fontWeight: '900', color: COLORS.textPrimary, marginBottom: 12 }}>Your Performance</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+                    <View style={{ alignItems: 'center', backgroundColor: COLORS.inputBackground, padding: 12, borderRadius: 16, minWidth: 80 }}>
+                      <Text style={{ fontSize: 24, fontWeight: '900', color: COLORS.primary }}>
+                        {tutorProfileData.ratingSummary?.average || "0.0"}
+                      </Text>
+                      <View style={{ flexDirection: 'row', marginTop: 4 }}>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Ionicons 
+                            key={`star-${star}`} 
+                            name={star <= Math.round(tutorProfileData.ratingSummary?.average || 0) ? "star" : "star-outline"} 
+                            size={12} 
+                            color={COLORS.primary} 
+                          />
+                        ))}
+                      </View>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: COLORS.textPrimary }}>
+                        {tutorProfileData.ratingSummary?.count || 0} Total Reviews
+                      </Text>
+                      <Text style={{ fontSize: 12, color: COLORS.textSecondary, marginTop: 4 }}>
+                        Keep up the great work to maintain your rating!
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Profile Details Card */}
+                <View style={{ backgroundColor: COLORS.white, borderRadius: 20, padding: 18, marginBottom: 16, borderWidth: 1, borderColor: COLORS.border }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                    <Text style={{ fontSize: 18, fontWeight: '900', color: COLORS.textPrimary }}>Profile Details</Text>
+                    <TouchableOpacity onPress={() => router.push("/(tabs)/edit-profile")}>
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: COLORS.primary }}>Edit</Text>
+                    </TouchableOpacity>
+                  </View>
+                  
+                  <View style={{ gap: 8 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      <Text style={{ fontSize: 14, color: COLORS.textSecondary }}>Subject</Text>
+                      <Text style={{ fontSize: 14, fontWeight: '800', color: COLORS.textPrimary }}>{tutorProfileData.tutorProfile?.subject || "Not set"}</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      <Text style={{ fontSize: 14, color: COLORS.textSecondary }}>Rate</Text>
+                      <Text style={{ fontSize: 14, fontWeight: '800', color: COLORS.textPrimary }}>Rs. {tutorProfileData.tutorProfile?.price || "0"}/{tutorProfileData.tutorProfile?.priceType || "hr"}</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      <Text style={{ fontSize: 14, color: COLORS.textSecondary }}>Experience</Text>
+                      <Text style={{ fontSize: 14, fontWeight: '800', color: COLORS.textPrimary }}>{tutorProfileData.tutorProfile?.experienceLevel || "Not set"}</Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Recent Feedbacks */}
+                {tutorProfileData.reviews?.length > 0 && (
+                  <View style={{ marginBottom: 16 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingHorizontal: 4 }}>
+                      <Text style={{ fontSize: 18, fontWeight: '900', color: COLORS.textPrimary }}>Recent Feedback</Text>
+                      <TouchableOpacity onPress={() => router.push({ pathname: '/(tabs)/tutor/reviews', params: { id: user?._id || user?.id } })}>
+                        <Text style={{ fontSize: 14, fontWeight: '700', color: COLORS.primary }}>See All</Text>
+                      </TouchableOpacity>
+                    </View>
+                    {tutorProfileData.reviews.slice(0, 2).map((review, idx) => (
+                      <View key={review.id || idx} style={{ backgroundColor: COLORS.white, borderRadius: 16, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: COLORS.border }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                          <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: COLORS.inputBackground, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                            {review.profileImage ? (
+                              <Image source={{ uri: review.profileImage }} style={{ width: '100%', height: '100%' }} />
+                            ) : (
+                              <Ionicons name="person" size={16} color={COLORS.primary} />
+                            )}
+                          </View>
+                          <View style={{ marginLeft: 10, flex: 1 }}>
+                            <Text style={{ fontSize: 14, fontWeight: '800', color: COLORS.textPrimary }}>{review.name}</Text>
+                            <View style={{ flexDirection: 'row' }}>
+                              {[1, 2, 3, 4, 5].map(s => (
+                                <Ionicons key={s} name={s <= review.rating ? "star" : "star-outline"} size={10} color={COLORS.primary} />
+                              ))}
+                            </View>
+                          </View>
+                          <Text style={{ fontSize: 10, color: COLORS.textSecondary }}>
+                            {new Date(review.createdAt).toLocaleDateString()}
+                          </Text>
+                        </View>
+                        <Text style={{ fontSize: 13, color: COLORS.textSecondary, fontStyle: 'italic' }}>"{review.comment}"</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            )}
+
             <View style={{ borderRadius: 28, padding: 18, marginBottom: 16, backgroundColor: COLORS.white, borderWidth: 1, borderColor: '#e6edf5', boxShadow: '0px 8px 14px rgba(0, 0, 0, 0.08)', elevation: 3 }}>
               <Text style={{ fontSize: 36, fontWeight: '900', color: COLORS.textPrimary, letterSpacing: 0.2, lineHeight: 40 }}>
-                {isTutor ? "Students" : "Subjects"}
+                {isTutor ? "Your Bookings" : "Subjects"}
               </Text>
               <Text style={{ fontSize: 14, color: COLORS.textSecondary, marginTop: 4, lineHeight: 20 }}>
-                {isTutor ? "Here are the students that booked sessions with you." : "Pick a subject and jump straight into the tutors who teach it."}
+                {isTutor ? "Manage your upcoming sessions with students." : "Pick a subject and jump straight into the tutors who teach it."}
               </Text>
 
               <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.inputBackground, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 12, borderWidth: 1, borderColor: COLORS.border }}>
-                  <Ionicons name={isTutor ? "people-outline" : "grid-outline"} size={14} color={COLORS.primary} />
+                  <Ionicons name={isTutor ? "calendar-outline" : "grid-outline"} size={14} color={COLORS.primary} />
                   <Text style={{ color: COLORS.textPrimary, fontSize: 12, fontWeight: '700', marginLeft: 6 }}>
-                    {isTutor ? `${filteredSessions.length} sessions` : `${filteredSubjects.length} subjects`}
+                    {isTutor ? `${filteredSessions.length} active sessions` : `${filteredSubjects.length} subjects`}
                   </Text>
                 </View>
               </View>

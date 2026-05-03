@@ -511,9 +511,59 @@ router.get('/debug/all-tutors', protectRoute, async (req, res) => {
 });
 
 
+// Get current tutor's own profile and rating summary
+router.get('/profile/me', protectRoute, async (req, res) => {
+    try {
+        if (req.user.role !== 'tutor') {
+            return res.status(403).json({ message: 'Only tutors can view their own profile' });
+        }
+
+        const tutor = await User.findById(req.user._id)
+            .select('_id username email profileImage tutorProfile.fullName tutorProfile.subject tutorProfile.bio tutorProfile.mobileNumber tutorProfile.availability tutorProfile.age tutorProfile.price tutorProfile.priceType tutorProfile.experienceLevel tutorProfile.yearsOfExperience tutorProfile.kyc createdAt')
+            .lean();
+
+        if (!tutor) {
+            return res.status(404).json({ message: "Tutor not found" });
+        }
+
+        const [ratingSummaryMap, reviews] = await Promise.all([
+            buildRatingSummary([tutor._id]),
+            TutorRating.find({ tutor: tutor._id })
+                .sort({ createdAt: -1 })
+                .limit(10)
+                .populate('student', 'username profileImage')
+                .lean(),
+        ]);
+
+        const ratingSummary = ratingSummaryMap.get(tutor._id.toString()) || emptyRatingSummary;
+        const formattedReviews = reviews.map((review) => ({
+            id: review._id,
+            name: review.student?.username || 'Student',
+            profileImage: review.student?.profileImage || '',
+            rating: review.rating,
+            comment: review.comment || '',
+            createdAt: review.createdAt,
+        }));
+
+        res.status(200).json({
+            ...tutor,
+            ratingSummary,
+            reviews: formattedReviews,
+        });
+
+    } catch (error) {
+        console.error("❌ Error fetching current tutor profile:", error);
+        res.status(500).json({ message: "Internal Server error", error: error.message });
+    }
+});
+
 // Get tutor by ID
 router.get('/:id', protectRoute, async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ message: "Invalid tutor ID format" });
+        }
+
         const isAdmin = String(req.user?.role || '') === 'admin';
         const tutorQuery = isAdmin
             ? { _id: req.params.id, role: 'tutor' }
